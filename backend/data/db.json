@@ -1,0 +1,29 @@
+{
+  "workers": {
+    "618cf0ea5731bf228354c119b7a6aaf459a0a1f87d2c7cd9f5d0d116394f8345": {
+      "commitment": "194455531885962717236299653092796629721854390911341282422709467021689727444field",
+      "skills": [
+        "Rust",
+        "Leo",
+        "Solidity",
+        "React",
+        "TypeScript",
+        "Backend",
+        "Frontend"
+      ],
+      "bio": "fullstack",
+      "ratePerHour": 25,
+      "currency": "usdcx",
+      "createdAt": "2026-02-17T23:11:26.363Z",
+      "txId": "shield_1771369886350_5y85gyr32qq"
+    }
+  },
+  "jobs": {},
+  "applications": {},
+  "agreements": {},
+  "escrows": {},
+  "deliverables": {},
+  "reputation": {},
+  "nonces": {},
+  "events": []
+}

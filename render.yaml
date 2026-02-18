@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: zkwork-backend
+    runtime: node
+    rootDir: zkwork/backend
+    buildCommand: npm install && npx tsc
+    startCommand: node dist/index.js
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false
+      - key: ALEO_PROGRAM_ID
+        value: zkwork_private_v1.aleo
+      - key: PROVABLE_API_BASE
+        value: https://api.explorer.provable.com/v1/testnet
+    healthCheckPath: /health
