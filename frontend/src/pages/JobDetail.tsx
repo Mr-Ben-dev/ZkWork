@@ -9,6 +9,7 @@ import { displayToMicro } from '../lib/aleo';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { JobContract } from '../components/icons';
+import { AnimatedBackground } from '../components/ui/AnimatedBackground';
 
 export const JobDetail: FC = () => {
   const { commitment } = useParams<{ commitment: string }>();
@@ -171,17 +172,24 @@ export const JobDetail: FC = () => {
 
   if (!job) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <JobContract className="w-12 h-12 text-white/20 mx-auto mb-4" />
-        <p className="text-white/40">Job not found</p>
+      <div className="relative min-h-screen">
+        <AnimatedBackground />
+        <div className="relative z-10 max-w-3xl mx-auto px-4 py-20 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-6">
+            <JobContract className="w-8 h-8 text-accent" />
+          </div>
+          <p className="text-white/40">Job not found</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
+    <div className="relative min-h-screen">
+      <AnimatedBackground />
+      <div className="relative z-10 max-w-3xl mx-auto px-4 py-10">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="glass p-6 mb-6">
+        <div className="glass-glow p-6 sm:p-8 mb-6">
           <div className="flex items-start justify-between mb-4">
             <h1 className="text-2xl font-bold flex-1 mr-4">{job.title}</h1>
             <StatusBadge status={job.status} />
@@ -189,10 +197,10 @@ export const JobDetail: FC = () => {
           <p className="text-white/50 mb-4 leading-relaxed">{job.description}</p>
           <div className="flex flex-wrap gap-2 mb-4">
             {job.skills?.map((s: string) => (
-              <span key={s} className="badge-glass">{s}</span>
+              <span key={s} className="badge-accent">{s}</span>
             ))}
           </div>
-          <div className="flex items-center gap-6 text-sm">
+          <div className="flex items-center gap-6 text-sm p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
             <span className="text-accent font-semibold">
               {job.budget} {job.currency?.toUpperCase()}
             </span>
@@ -206,7 +214,7 @@ export const JobDetail: FC = () => {
         </div>
 
         {job.status === 'open' && isAuthenticated && (
-          <div className="glass p-6 mb-6">
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-glow p-6 sm:p-8 mb-6">
             <h2 className="text-lg font-semibold mb-4">Apply for this Job</h2>
             <div className="space-y-4">
               <div>
@@ -242,15 +250,15 @@ export const JobDetail: FC = () => {
                 {applying ? <><LoadingSpinner size={16} /> Applying...</> : 'Submit Application'}
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {applications.length > 0 && (
-          <div className="glass p-6">
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-glow p-6 sm:p-8">
             <h2 className="text-lg font-semibold mb-4">Applications</h2>
             <div className="space-y-3">
               {applications.map((app) => (
-                <div key={app.id} className="p-4 rounded-xl bg-white/5">
+                <div key={app.id} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] transition-all duration-300">
                   <p className="text-sm text-white/60 mb-2">{app.coverLetter}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-accent font-medium">
@@ -268,9 +276,10 @@ export const JobDetail: FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
       </motion.div>
+      </div>
     </div>
   );
 };

@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { to: '/agreements', label: 'Agreements' },
   { to: '/reputation', label: 'Reputation' },
   { to: '/dashboard', label: 'Dashboard' },
+  { to: '/profile', label: 'Profile' },
 ];
 
 export const Navbar: FC = () => {
@@ -28,11 +29,13 @@ export const Navbar: FC = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5">
+    <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-black/60 border-b border-white/[0.06]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2 group">
-            <PrivacyShield className="w-7 h-7 text-accent group-hover:drop-shadow-[0_0_8px_rgba(0,240,255,0.5)] transition-all" />
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 group-hover:shadow-lg group-hover:shadow-accent/20 transition-all duration-300">
+              <PrivacyShield className="w-5 h-5 text-accent" />
+            </div>
             <span className="text-lg font-bold tracking-tight">
               ZK<span className="text-accent">Work</span>
             </span>
@@ -43,13 +46,20 @@ export const Navbar: FC = () => {
               <Link
                 key={link.to}
                 to={link.to}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`relative px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                   location.pathname === link.to
-                    ? 'text-accent bg-accent/10'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                    ? 'text-accent bg-accent/10 shadow-sm shadow-accent/20'
+                    : 'text-white/50 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
                 {link.label}
+                {location.pathname === link.to && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-accent rounded-full"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
               </Link>
             ))}
           </div>

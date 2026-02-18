@@ -101,17 +101,20 @@ export const PostJob: FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center gap-3 mb-8">
-          <JobContract className="w-10 h-10 text-accent" />
+    <div className="relative min-h-screen">
+      <div className="max-w-2xl mx-auto px-4 py-12">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+        <div className="flex items-center gap-4 mb-10">
+          <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shadow-[0_0_20px_rgba(0,240,255,0.08)]">
+            <JobContract className="w-6 h-6 text-accent" />
+          </div>
           <div>
-            <h1 className="text-2xl font-bold">Post a Job</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Post a Job</h1>
             <p className="text-sm text-white/40">Job details stored off-chain. Only commitments go on-chain.</p>
           </div>
         </div>
 
-        <div className="glass p-6 space-y-6">
+        <div className="glass-glow p-6 sm:p-8 space-y-6">
           <div>
             <label className="block text-sm font-medium text-white/60 mb-2">Job Title</label>
             <input
@@ -141,10 +144,10 @@ export const PostJob: FC = () => {
                 <button
                   key={skill}
                   onClick={() => toggleSkill(skill)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all border ${
+                  className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-300 border ${
                     skills.includes(skill)
-                      ? 'bg-accent/20 border-accent/40 text-accent'
-                      : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'
+                      ? 'bg-accent/15 border-accent/30 text-accent shadow-[0_0_12px_rgba(0,240,255,0.1)]'
+                      : 'bg-white/[0.04] border-white/[0.08] text-white/50 hover:bg-white/[0.08] hover:border-white/[0.15]'
                   }`}
                 >
                   {skill}
@@ -168,14 +171,22 @@ export const PostJob: FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-white/60 mb-2">Currency</label>
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value as 'aleo' | 'usdcx')}
-                className="input-field"
-              >
-                <option value="aleo">ALEO</option>
-                <option value="usdcx">USDCx</option>
-              </select>
+              <div className="flex gap-2">
+                {(['aleo', 'usdcx'] as const).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCurrency(c)}
+                    className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-300 border ${
+                      currency === c
+                        ? 'bg-accent/15 border-accent/30 text-accent shadow-[0_0_15px_rgba(0,240,255,0.1)]'
+                        : 'bg-white/[0.04] border-white/[0.08] text-white/50 hover:bg-white/[0.08]'
+                    }`}
+                  >
+                    {c.toUpperCase()}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -199,19 +210,23 @@ export const PostJob: FC = () => {
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="btn-primary w-full flex items-center justify-center gap-2"
+            className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-base"
           >
             {submitting ? (
               <>
                 <LoadingSpinner size={18} />
-                Posting...
+                Posting on-chain...
               </>
             ) : (
-              'Post Job'
+              <>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                Post Job
+              </>
             )}
           </button>
         </div>
       </motion.div>
+      </div>
     </div>
   );
 };

@@ -11,12 +11,12 @@ export const Layout: FC<LayoutProps> = ({ children }) => {
   const pendingCount = transactions.filter((t) => t.status === 'pending').length;
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white overflow-x-hidden">
       <Navbar />
       {pendingCount > 0 && (
-        <div className="fixed top-16 left-0 right-0 z-40 bg-accent/10 border-b border-accent/20 px-4 py-2">
+        <div className="fixed top-16 left-0 right-0 z-40 backdrop-blur-xl bg-accent/[0.06] border-b border-accent/20 px-4 py-2">
           <div className="max-w-7xl mx-auto flex items-center gap-2 text-sm">
-            <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-accent animate-pulse shadow-lg shadow-accent/50" />
             <span className="text-accent/80">
               {pendingCount} transaction{pendingCount > 1 ? 's' : ''} pending confirmation...
             </span>

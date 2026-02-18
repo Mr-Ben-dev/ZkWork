@@ -5,6 +5,7 @@ import { useUserStore } from '../stores/userStore';
 import { apiClient } from '../lib/api';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { ReputationStar, ZKBadge } from '../components/icons';
+import { AnimatedBackground } from '../components/ui/AnimatedBackground';
 
 export const Reputation: FC = () => {
   const { connected, executeTransition, findRecord, findRecordWithRetry, authenticate } = useZKWorkWallet();
@@ -174,10 +175,15 @@ export const Reputation: FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <ReputationStar className="w-16 h-16 text-white/20 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Reputation</h1>
-        <p className="text-white/40">Sign in to manage your ZK reputation.</p>
+      <div className="relative min-h-screen">
+        <AnimatedBackground />
+        <div className="relative z-10 max-w-3xl mx-auto px-4 py-20 text-center">
+          <div className="w-20 h-20 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-6">
+            <ReputationStar className="w-10 h-10 text-accent" />
+          </div>
+          <h1 className="text-2xl font-bold mb-2">Reputation</h1>
+          <p className="text-white/40">Sign in to manage your ZK reputation.</p>
+        </div>
       </div>
     );
   }
@@ -191,21 +197,25 @@ export const Reputation: FC = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
+    <div className="relative min-h-screen">
+      <AnimatedBackground />
+      <div className="relative z-10 max-w-3xl mx-auto px-4 py-10">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center gap-3 mb-8">
-          <ReputationStar className="w-10 h-10 text-accent" />
-          <div>
-            <h1 className="text-2xl font-bold">ZK Reputation</h1>
-            <p className="text-sm text-white/40">
-              Build and prove your work history without revealing your identity.
-            </p>
+        <div className="glass-glow p-6 sm:p-8 mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shadow-lg shadow-accent/10">
+              <ReputationStar className="w-6 h-6 text-accent" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">ZK Reputation</h1>
+              <p className="text-sm text-white/40">
+                Build and prove your work history without revealing your identity.
+              </p>
+            </div>
           </div>
-        </div>
 
-        <div className="glass p-6 mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center">
+          <div className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-cyan-500/10 flex items-center justify-center shadow-lg shadow-accent/20">
               <span className="text-3xl font-bold text-accent">
                 {reputation?.claimedJobs ?? 0}
               </span>
@@ -234,11 +244,14 @@ export const Reputation: FC = () => {
         )}
 
         {agreements.length > 0 && (
-          <div className="glass p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">Completed Jobs — Claim Reputation</h2>
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-glow p-6 sm:p-8 mb-6">
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              Completed Jobs — Claim Reputation
+            </h2>
             <div className="space-y-3">
               {agreements.map((ag) => (
-                <div key={ag.commitment} className="flex items-center justify-between p-4 rounded-xl bg-white/5">
+                <div key={ag.commitment} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] transition-all duration-300">
                   <div>
                     <p className="text-sm font-mono text-white/60">
                       {ag.commitment.slice(0, 20)}...
@@ -250,7 +263,7 @@ export const Reputation: FC = () => {
                   <button
                     onClick={() => handleClaim(ag.commitment)}
                     disabled={claiming === ag.commitment}
-                    className="btn-primary text-sm px-4 py-1.5 flex items-center gap-1.5"
+                    className="btn-primary text-sm px-4 py-2 flex items-center gap-1.5"
                   >
                     {claiming === ag.commitment ? (
                       <><LoadingSpinner size={14} /> Claiming...</>
@@ -261,10 +274,10 @@ export const Reputation: FC = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
 
-        <div className="glass p-6">
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-glow p-6 sm:p-8">
           <div className="flex items-center gap-2 mb-4">
             <ZKBadge className="w-5 h-5 text-accent" />
             <h2 className="text-lg font-semibold">Prove Threshold</h2>
@@ -315,8 +328,9 @@ export const Reputation: FC = () => {
               )}
             </button>
           </div>
-        </div>
+        </motion.div>
       </motion.div>
+      </div>
     </div>
   );
 };

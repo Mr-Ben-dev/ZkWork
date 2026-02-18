@@ -6,6 +6,7 @@ import { apiClient } from '../lib/api';
 import { formatAddress } from '../lib/aleo';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { AnonAvatar, ReputationStar } from '../components/icons';
+import { AnimatedBackground } from '../components/ui/AnimatedBackground';
 
 export const Profile: FC = () => {
   const { walletAddress, connected } = useZKWorkWallet();
@@ -37,10 +38,15 @@ export const Profile: FC = () => {
 
   if (!connected || !isAuthenticated) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <AnonAvatar className="w-16 h-16 text-white/20 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Profile</h1>
-        <p className="text-white/40">Connect and sign in to view your profile.</p>
+      <div className="relative min-h-screen">
+        <AnimatedBackground />
+        <div className="relative z-10 max-w-3xl mx-auto px-4 py-20 text-center">
+          <div className="w-20 h-20 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-6">
+            <AnonAvatar className="w-10 h-10 text-accent" />
+          </div>
+          <h1 className="text-2xl font-bold mb-2">Profile</h1>
+          <p className="text-white/40">Connect and sign in to view your profile.</p>
+        </div>
       </div>
     );
   }
@@ -54,11 +60,13 @@ export const Profile: FC = () => {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10">
+    <div className="relative min-h-screen">
+      <AnimatedBackground />
+      <div className="relative z-10 max-w-3xl mx-auto px-4 py-10">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="glass p-8 mb-6">
+        <div className="glass-glow p-8 sm:p-10 mb-6">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-cyan-500/10 flex items-center justify-center shadow-lg shadow-accent/20">
               <AnonAvatar className="w-8 h-8 text-accent" />
             </div>
             <div>
@@ -71,7 +79,7 @@ export const Profile: FC = () => {
 
           {profile ? (
             <div className="space-y-4">
-              <div>
+              <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                 <span className="text-xs text-white/40 uppercase tracking-wider">Bio</span>
                 <p className="text-white/70 mt-1">{profile.bio}</p>
               </div>
@@ -79,18 +87,18 @@ export const Profile: FC = () => {
                 <span className="text-xs text-white/40 uppercase tracking-wider">Skills</span>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {profile.skills?.map((s: string) => (
-                    <span key={s} className="badge-glass">{s}</span>
+                    <span key={s} className="badge-accent">{s}</span>
                   ))}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                   <span className="text-xs text-white/40 uppercase tracking-wider">Rate</span>
                   <p className="text-accent font-semibold mt-1">
                     {profile.ratePerHour} {profile.currency?.toUpperCase()}/hr
                   </p>
                 </div>
-                <div>
+                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                   <span className="text-xs text-white/40 uppercase tracking-wider">Registered</span>
                   <p className="text-white/70 mt-1">
                     {new Date(profile.createdAt).toLocaleDateString()}
@@ -103,14 +111,14 @@ export const Profile: FC = () => {
           )}
         </div>
 
-        <div className="glass p-6">
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-glow p-6 sm:p-8">
           <div className="flex items-center gap-2 mb-4">
             <ReputationStar className="w-5 h-5 text-accent" />
             <h2 className="text-lg font-semibold">Reputation</h2>
           </div>
           {reputation && reputation.claimedJobs > 0 ? (
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+            <div className="flex items-center gap-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/20 to-cyan-500/10 flex items-center justify-center shadow-lg shadow-accent/20">
                 <span className="text-2xl font-bold text-accent">{reputation.claimedJobs}</span>
               </div>
               <div>
@@ -123,8 +131,9 @@ export const Profile: FC = () => {
           ) : (
             <p className="text-white/40 text-sm">No reputation claimed yet.</p>
           )}
-        </div>
+        </motion.div>
       </motion.div>
+      </div>
     </div>
   );
 };

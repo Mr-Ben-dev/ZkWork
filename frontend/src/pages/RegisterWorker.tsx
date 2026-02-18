@@ -8,6 +8,7 @@ import { displayToMicro } from '../lib/aleo';
 import { stringToField, randomField } from '../lib/commitment';
 import { AnonAvatar } from '../components/icons';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { AnimatedBackground } from '../components/ui/AnimatedBackground';
 
 const SKILL_OPTIONS = [
   'Solidity', 'Leo', 'Rust', 'TypeScript', 'React', 'Node.js',
@@ -94,28 +95,34 @@ export const RegisterWorker: FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10">
+    <div className="relative min-h-screen">
+      <AnimatedBackground />
+      <div className="relative z-10 max-w-2xl mx-auto px-4 py-10">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center gap-3 mb-8">
-          <AnonAvatar className="w-10 h-10 text-accent" />
-          <div>
-            <h1 className="text-2xl font-bold">Register as Worker</h1>
-            <p className="text-sm text-white/40">Your profile stays private — stored as a Leo record.</p>
+        <div className="glass-glow p-6 sm:p-8 mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shadow-lg shadow-accent/10">
+              <AnonAvatar className="w-6 h-6 text-accent" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Register as Worker</h1>
+              <p className="text-sm text-white/40">Your profile stays private — stored as a Leo record.</p>
+            </div>
           </div>
         </div>
 
-        <div className="glass p-6 space-y-6">
+        <div className="glass-glow p-6 sm:p-8 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-white/60 mb-2">Skills</label>
+            <label className="block text-sm font-medium text-white/60 mb-3">Skills</label>
             <div className="flex flex-wrap gap-2">
               {SKILL_OPTIONS.map((skill) => (
                 <button
                   key={skill}
                   onClick={() => toggleSkill(skill)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all border ${
+                  className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all border ${
                     skills.includes(skill)
-                      ? 'bg-accent/20 border-accent/40 text-accent'
-                      : 'bg-white/5 border-white/10 text-white/50 hover:bg-white/10'
+                      ? 'bg-accent/20 border-accent/40 text-accent shadow-lg shadow-accent/20'
+                      : 'bg-white/[0.04] border-white/[0.08] text-white/50 hover:bg-white/[0.08]'
                   }`}
                 >
                   {skill}
@@ -150,14 +157,22 @@ export const RegisterWorker: FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-white/60 mb-2">Currency</label>
-              <select
-                value={currency}
-                onChange={(e) => setCurrency(e.target.value as 'aleo' | 'usdcx')}
-                className="input-field"
-              >
-                <option value="aleo">ALEO</option>
-                <option value="usdcx">USDCx</option>
-              </select>
+              <div className="flex gap-2">
+                {(['aleo', 'usdcx'] as const).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCurrency(c)}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all border ${
+                      currency === c
+                        ? 'bg-accent/20 border-accent/40 text-accent shadow-lg shadow-accent/20'
+                        : 'bg-white/[0.04] border-white/[0.08] text-white/50 hover:bg-white/[0.08]'
+                    }`}
+                  >
+                    {c.toUpperCase()}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -170,7 +185,7 @@ export const RegisterWorker: FC = () => {
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="btn-primary w-full flex items-center justify-center gap-2"
+            className="btn-primary w-full py-4 flex items-center justify-center gap-2 text-base"
           >
             {submitting ? (
               <>
@@ -178,11 +193,15 @@ export const RegisterWorker: FC = () => {
                 Submitting...
               </>
             ) : (
-              'Register Profile'
+              <>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Register Profile
+              </>
             )}
           </button>
         </div>
       </motion.div>
+      </div>
     </div>
   );
 };

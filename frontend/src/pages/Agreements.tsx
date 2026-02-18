@@ -6,6 +6,7 @@ import { apiClient } from '../lib/api';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { EscrowLock } from '../components/icons';
+import { AnimatedBackground } from '../components/ui/AnimatedBackground';
 
 export const Agreements: FC = () => {
   const { isAuthenticated } = useUserStore();
@@ -33,10 +34,15 @@ export const Agreements: FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-        <EscrowLock className="w-16 h-16 text-white/20 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold mb-2">Agreements</h1>
-        <p className="text-white/40">Sign in to view your agreements.</p>
+      <div className="relative min-h-screen">
+        <AnimatedBackground />
+        <div className="relative z-10 max-w-3xl mx-auto px-4 py-20 text-center">
+          <div className="w-20 h-20 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-6">
+            <EscrowLock className="w-10 h-10 text-accent" />
+          </div>
+          <h1 className="text-2xl font-bold mb-2">Agreements</h1>
+          <p className="text-white/40">Sign in to view your agreements.</p>
+        </div>
       </div>
     );
   }
@@ -50,22 +56,33 @@ export const Agreements: FC = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="relative min-h-screen">
+      <AnimatedBackground />
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h1 className="text-3xl font-bold">Agreements</h1>
-        <p className="text-white/40 text-sm mt-1">
-          {agreements.length} agreement{agreements.length !== 1 ? 's' : ''}
-        </p>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+            <EscrowLock className="w-5 h-5 text-accent" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold">Agreements</h1>
+            <p className="text-white/40 text-sm mt-1">
+              {agreements.length} agreement{agreements.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+        </div>
       </motion.div>
 
       {agreements.length === 0 ? (
-        <div className="text-center py-16">
-          <EscrowLock className="w-12 h-12 text-white/20 mx-auto mb-4" />
-          <p className="text-white/40">No agreements yet.</p>
-          <Link to="/jobs" className="text-accent text-sm hover:underline mt-2 inline-block">
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-glow p-12 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-6">
+            <EscrowLock className="w-8 h-8 text-accent" />
+          </div>
+          <p className="text-white/40 text-lg mb-4">No agreements yet.</p>
+          <Link to="/jobs" className="btn-primary text-sm">
             Browse jobs to get started
           </Link>
-        </div>
+        </motion.div>
       ) : (
         <div className="space-y-4">
           {agreements.map((ag, i) => (
@@ -77,7 +94,7 @@ export const Agreements: FC = () => {
             >
               <Link
                 to={`/agreements/${ag.commitment}`}
-                className="block glass-hover p-5"
+                className="block card-gradient p-5 rounded-xl"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -100,6 +117,7 @@ export const Agreements: FC = () => {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 };
