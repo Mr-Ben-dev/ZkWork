@@ -18,12 +18,166 @@
       "txId": "shield_1771369886350_5y85gyr32qq"
     }
   },
-  "jobs": {},
-  "applications": {},
-  "agreements": {},
+  "jobs": {
+    "213071080116795356383318725931470864522835058980524930431147249240803064697field": {
+      "commitment": "213071080116795356383318725931470864522835058980524930431147249240803064697field",
+      "title": "usdcx",
+      "description": "usdcx",
+      "budget": 0.2,
+      "currency": "usdcx",
+      "skills": [
+        "Solidity",
+        "Leo",
+        "TypeScript"
+      ],
+      "deadline": "2026-03-13",
+      "posterHash": "0136378a248a05392a02b768beb5665a314daae8889991dcf61733201e3d299e",
+      "status": "assigned",
+      "applicantCount": 1,
+      "txId": "shield_1773351115009_2u2otvy8dkh",
+      "createdAt": "2026-03-12T21:31:55.017Z"
+    },
+    "451710349283356691872822591954624840247098650406157637379178068035711936603field": {
+      "commitment": "451710349283356691872822591954624840247098650406157637379178068035711936603field",
+      "title": "usad",
+      "description": "usad",
+      "budget": 0.19,
+      "currency": "usad",
+      "skills": [
+        "Rust",
+        "Frontend",
+        "DevOps"
+      ],
+      "deadline": "2026-03-13",
+      "posterHash": "0136378a248a05392a02b768beb5665a314daae8889991dcf61733201e3d299e",
+      "status": "assigned",
+      "applicantCount": 1,
+      "txId": "shield_1773351159462_u58clln20m",
+      "createdAt": "2026-03-12T21:32:39.473Z"
+    }
+  },
+  "applications": {
+    "59c89af2e01141cb9b5920924c02eed7": {
+      "id": "59c89af2e01141cb9b5920924c02eed7",
+      "jobCommitment": "451710349283356691872822591954624840247098650406157637379178068035711936603field",
+      "workerCommitment": "331177816406930717953345853070293210884976687427115159168800983073058275375field",
+      "workerHash": "7c84bc18a2f6eb5377e5c41b601463ddcad6733cc278c1107dabfd962d27b90e",
+      "workerAddress": "aleo19ceftpwkcpgsqdx9hvg6vxy2merc924a8g8c7lwxr5scpu67ggfqvsuaq6",
+      "coverLetter": "wwwwww",
+      "proposedRate": 0.2,
+      "status": "accepted",
+      "createdAt": "2026-03-12T21:34:10.339Z"
+    },
+    "18aa8ceff638019ddd157d3f23265148": {
+      "id": "18aa8ceff638019ddd157d3f23265148",
+      "jobCommitment": "213071080116795356383318725931470864522835058980524930431147249240803064697field",
+      "workerCommitment": "113021513215551988151130941313210177962406886492694122904392454610419741475field",
+      "workerHash": "7c84bc18a2f6eb5377e5c41b601463ddcad6733cc278c1107dabfd962d27b90e",
+      "workerAddress": "aleo19ceftpwkcpgsqdx9hvg6vxy2merc924a8g8c7lwxr5scpu67ggfqvsuaq6",
+      "coverLetter": "dadadasd",
+      "proposedRate": 1,
+      "status": "accepted",
+      "createdAt": "2026-03-12T21:42:33.742Z"
+    }
+  },
+  "agreements": {
+    "331003193610639365168902849957294042525148346801412798267625730884779396879field": {
+      "commitment": "331003193610639365168902849957294042525148346801412798267625730884779396879field",
+      "jobCommitment": "451710349283356691872822591954624840247098650406157637379178068035711936603field",
+      "workerCommitment": "331177816406930717953345853070293210884976687427115159168800983073058275375field",
+      "workerHash": "7c84bc18a2f6eb5377e5c41b601463ddcad6733cc278c1107dabfd962d27b90e",
+      "clientHash": "0136378a248a05392a02b768beb5665a314daae8889991dcf61733201e3d299e",
+      "amount": 0.2,
+      "currency": "usad",
+      "status": "active",
+      "txId": "shield_1773351273673_awwr2em16xk",
+      "createdAt": "2026-03-12T21:34:37.310Z"
+    },
+    "432449596449956533447564284330310064582292762736398777357054115110018905147field": {
+      "commitment": "432449596449956533447564284330310064582292762736398777357054115110018905147field",
+      "jobCommitment": "213071080116795356383318725931470864522835058980524930431147249240803064697field",
+      "workerCommitment": "113021513215551988151130941313210177962406886492694122904392454610419741475field",
+      "workerHash": "7c84bc18a2f6eb5377e5c41b601463ddcad6733cc278c1107dabfd962d27b90e",
+      "clientHash": "0136378a248a05392a02b768beb5665a314daae8889991dcf61733201e3d299e",
+      "amount": 0.2,
+      "currency": "usdcx",
+      "status": "delivered",
+      "txId": "shield_1773351764812_qwwpvjmkun",
+      "createdAt": "2026-03-12T21:42:47.830Z",
+      "onChainAgreementId": "1758311625027851587059249256682008120178073565761753869162403020151824381455field",
+      "deliverable": "jojgfy"
+    }
+  },
   "escrows": {},
-  "deliverables": {},
+  "deliverables": {
+    "432449596449956533447564284330310064582292762736398777357054115110018905147field": {
+      "agreementCommitment": "432449596449956533447564284330310064582292762736398777357054115110018905147field",
+      "deliverableHash": "jojgfy",
+      "status": "submitted",
+      "txId": "shield_1773352236025_8twa8k2oomk",
+      "createdAt": "2026-03-12T21:50:36.090Z"
+    }
+  },
   "reputation": {},
   "nonces": {},
-  "events": []
+  "events": [
+    {
+      "type": "job_created",
+      "actorHash": "0136378a248a05392a02b768beb5665a314daae8889991dcf61733201e3d299e",
+      "data": {
+        "commitment": "213071080116795356383318725931470864522835058980524930431147249240803064697field"
+      },
+      "timestamp": "2026-03-12T21:31:55.019Z"
+    },
+    {
+      "type": "job_created",
+      "actorHash": "0136378a248a05392a02b768beb5665a314daae8889991dcf61733201e3d299e",
+      "data": {
+        "commitment": "451710349283356691872822591954624840247098650406157637379178068035711936603field"
+      },
+      "timestamp": "2026-03-12T21:32:39.474Z"
+    },
+    {
+      "type": "job_application",
+      "actorHash": "7c84bc18a2f6eb5377e5c41b601463ddcad6733cc278c1107dabfd962d27b90e",
+      "data": {
+        "jobCommitment": "451710349283356691872822591954624840247098650406157637379178068035711936603field"
+      },
+      "timestamp": "2026-03-12T21:34:10.341Z"
+    },
+    {
+      "type": "agreement_created",
+      "actorHash": "0136378a248a05392a02b768beb5665a314daae8889991dcf61733201e3d299e",
+      "data": {
+        "commitment": "331003193610639365168902849957294042525148346801412798267625730884779396879field",
+        "jobCommitment": "451710349283356691872822591954624840247098650406157637379178068035711936603field"
+      },
+      "timestamp": "2026-03-12T21:34:37.311Z"
+    },
+    {
+      "type": "job_application",
+      "actorHash": "7c84bc18a2f6eb5377e5c41b601463ddcad6733cc278c1107dabfd962d27b90e",
+      "data": {
+        "jobCommitment": "213071080116795356383318725931470864522835058980524930431147249240803064697field"
+      },
+      "timestamp": "2026-03-12T21:42:33.744Z"
+    },
+    {
+      "type": "agreement_created",
+      "actorHash": "0136378a248a05392a02b768beb5665a314daae8889991dcf61733201e3d299e",
+      "data": {
+        "commitment": "432449596449956533447564284330310064582292762736398777357054115110018905147field",
+        "jobCommitment": "213071080116795356383318725931470864522835058980524930431147249240803064697field"
+      },
+      "timestamp": "2026-03-12T21:42:47.831Z"
+    },
+    {
+      "type": "deliverable_submitted",
+      "actorHash": "7c84bc18a2f6eb5377e5c41b601463ddcad6733cc278c1107dabfd962d27b90e",
+      "data": {
+        "agreementCommitment": "432449596449956533447564284330310064582292762736398777357054115110018905147field"
+      },
+      "timestamp": "2026-03-12T21:50:36.091Z"
+    }
+  ]
 }

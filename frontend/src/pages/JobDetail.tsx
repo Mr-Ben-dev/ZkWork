@@ -150,7 +150,7 @@ export const JobDetail: FC = () => {
           commitment: agreementCommitment,
           jobCommitment: commitment!,
           workerCommitment: app.workerCommitment,
-          amount: app.proposedRate,
+          amount: job.budget,
           currency: job.currency,
           txId,
           onChainAgreementId,

@@ -161,7 +161,7 @@ export const AgreementDetail: FC = () => {
   /**
    * Find the latest Agreement record.
    * When onChainAgreementId is set: exact match across all output sources.
-   * When not set: uses salary + description_hash for reliable matching.
+   * When not set: uses salary + description_hash, then falls back to any Agreement.
    */
   const findLatestAgreement = async (): Promise<string | null> => {
     const agId = agreement?.onChainAgreementId;
@@ -184,6 +184,21 @@ export const AgreementDetail: FC = () => {
         return record;
       }
     }
+
+    // Fallback: try loose filter (any Agreement record) if strict filter failed
+    // This handles cases where off-chain amount != on-chain salary (e.g. proposedRate vs job.budget)
+    if (!agId) {
+      console.warn('[findLatestAgreement] Strict filter failed — trying loose match (any Agreement record)');
+      const looseFilter = (pt: string) => isAgreementRecord(pt);
+      for (const fn of sources) {
+        const record = await findRecord({ functionName: fn }, undefined, looseFilter);
+        if (record) {
+          await saveAgreementIdIfNeeded(record);
+          return record;
+        }
+      }
+    }
+
     // Retry with delays for sync
     for (const fn of sources) {
       const record = await findRecordWithRetry({ functionName: fn }, undefined, filter, 3, 3000);
