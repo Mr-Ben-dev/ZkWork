@@ -9,7 +9,7 @@ export const registerWorkerSchema = z.object({
   skills: z.array(z.string().min(1)).min(1),
   bio: z.string().min(1).max(2000),
   ratePerHour: z.number().positive(),
-  currency: z.enum(['aleo', 'usdcx']),
+  currency: z.enum(['aleo', 'usdcx', 'usad']),
   txId: txIdField,
 });
 
@@ -18,7 +18,7 @@ export const createJobSchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().min(1).max(5000),
   budget: z.number().positive(),
-  currency: z.enum(['aleo', 'usdcx']),
+  currency: z.enum(['aleo', 'usdcx', 'usad']),
   skills: z.array(z.string().min(1)).min(1),
   deadline: z.string().min(1),
   txId: txIdField,
@@ -35,7 +35,7 @@ export const createAgreementSchema = z.object({
   jobCommitment: fieldValue,
   workerCommitment: fieldValue,
   amount: z.number().positive(),
-  currency: z.enum(['aleo', 'usdcx']),
+  currency: z.enum(['aleo', 'usdcx', 'usad']),
   txId: txIdField,
   onChainAgreementId: z.string().optional(),
 });
@@ -43,7 +43,7 @@ export const createAgreementSchema = z.object({
 export const depositEscrowSchema = z.object({
   agreementCommitment: fieldValue,
   amount: z.number().positive(),
-  currency: z.enum(['aleo', 'usdcx']),
+  currency: z.enum(['aleo', 'usdcx', 'usad']),
   txId: txIdField,
 });
 

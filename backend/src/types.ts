@@ -3,7 +3,7 @@ export interface WorkerRecord {
   skills: string[];
   bio: string;
   ratePerHour: number;
-  currency: 'aleo' | 'usdcx';
+  currency: 'aleo' | 'usdcx' | 'usad';
   createdAt: string;
   txId: string;
 }
@@ -13,7 +13,7 @@ export interface JobRecord {
   title: string;
   description: string;
   budget: number;
-  currency: 'aleo' | 'usdcx';
+  currency: 'aleo' | 'usdcx' | 'usad';
   skills: string[];
   deadline: string;
   posterHash: string;
@@ -42,7 +42,7 @@ export interface AgreementRecord {
   workerHash: string;
   clientHash: string;
   amount: number;
-  currency: 'aleo' | 'usdcx';
+  currency: 'aleo' | 'usdcx' | 'usad';
   status: 'active' | 'delivered' | 'completed' | 'refunded' | 'cancelled';
   deliverable?: string;
   txId: string;
@@ -54,7 +54,7 @@ export interface AgreementRecord {
 export interface EscrowRecord {
   agreementCommitment: string;
   amount: number;
-  currency: 'aleo' | 'usdcx';
+  currency: 'aleo' | 'usdcx' | 'usad';
   status: 'pending' | 'deposited' | 'released' | 'refunded' | 'committed' | 'rejected';
   depositTxId: string;
   depositHeight: number;

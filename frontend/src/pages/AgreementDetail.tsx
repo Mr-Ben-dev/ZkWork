@@ -14,7 +14,7 @@ import { AnimatedBackground } from '../components/ui/AnimatedBackground';
 
 export const AgreementDetail: FC = () => {
   const { commitment } = useParams<{ commitment: string }>();
-  const { connected, executeTransition, findRecord, findAllRecords, findRecordWithRetry, findCreditsRecord, findTokenRecord, authenticate } = useZKWorkWallet();
+  const { connected, executeTransition, findRecord, findAllRecords, findRecordWithRetry, findCreditsRecord, findTokenRecord, findUsadRecord, authenticate } = useZKWorkWallet();
   const { isAuthenticated } = useUserStore();
 
   const [agreement, setAgreement] = useState<any>(null);
@@ -81,7 +81,7 @@ export const AgreementDetail: FC = () => {
       : null;
     const detect = async () => {
       try {
-        const fnNames = ['submit_deliverable', 'deposit_escrow_aleo', 'commit_escrow_usdcx', 'create_agreement'];
+        const fnNames = ['submit_deliverable', 'deposit_escrow_aleo', 'commit_escrow_usdcx', 'commit_escrow_usad', 'create_agreement'];
         const filter = (pt: string): boolean => {
           if (!isAgreementRecord(pt)) return false;
           const sal = parseSalaryFromRecord(pt);
@@ -176,7 +176,7 @@ export const AgreementDetail: FC = () => {
     }
 
     const filter = buildAgreementFilter(agId, expectedSalary, expectedDescHash);
-    const sources = ['submit_deliverable', 'deposit_escrow_aleo', 'commit_escrow_usdcx', 'create_agreement'];
+    const sources = ['submit_deliverable', 'deposit_escrow_aleo', 'commit_escrow_usdcx', 'commit_escrow_usad', 'create_agreement'];
     for (const fn of sources) {
       const record = await findRecord({ functionName: fn }, undefined, filter);
       if (record) {
@@ -265,7 +265,7 @@ export const AgreementDetail: FC = () => {
           'deposit_escrow',
           { agreementCommitment: commitment }
         );
-      } else {
+      } else if (agreement.currency === 'usdcx') {
         // commit_escrow_usdcx(agreement: Agreement)
         const agreementRecord = await findLatestAgreement();
         if (!agreementRecord) {
@@ -279,6 +279,22 @@ export const AgreementDetail: FC = () => {
           [agreementRecord],
           500_000,
           'commit_escrow_usdcx',
+          { agreementCommitment: commitment }
+        );
+      } else {
+        // commit_escrow_usad(agreement: Agreement)
+        const agreementRecord = await findLatestAgreement();
+        if (!agreementRecord) {
+          setError('Agreement record not found in wallet.');
+          setActionLoading('');
+          return;
+        }
+
+        txId = await executeTransition(
+          'commit_escrow_usad',
+          [agreementRecord],
+          500_000,
+          'commit_escrow_usad',
           { agreementCommitment: commitment }
         );
       }
@@ -345,7 +361,7 @@ export const AgreementDetail: FC = () => {
     setActionLoading('complete');
 
     try {
-      const transitionName = agreement.currency === 'aleo' ? 'complete_job_aleo' : 'complete_job_usdcx';
+      const transitionName = agreement.currency === 'aleo' ? 'complete_job_aleo' : agreement.currency === 'usdcx' ? 'complete_job_usdcx' : 'complete_job_usad';
 
       if (agreement.currency === 'aleo') {
         // complete_job_aleo(agreement: Agreement, escrow: EscrowReceipt, notice: DeliveryNotice)
@@ -439,7 +455,7 @@ export const AgreementDetail: FC = () => {
           });
           await loadData();
         }
-      } else {
+      } else if (agreement.currency === 'usdcx') {
         // complete_job_usdcx(agreement, escrow, notice, pay_record, amount, proofs)
         console.log('[complete] USDCx flow — looking for Agreement record...');
         const agreementRecord = await findLatestAgreement();
@@ -508,6 +524,90 @@ export const AgreementDetail: FC = () => {
         console.log('[complete] USDCx Token found:', tokenRecord.slice(0, 200));
 
         // Build compliance proofs (dummy non-membership proofs for testnet)
+        const [proof1, proof2] = buildMerkleProofPair();
+        const proofsInput = `[${proof1}, ${proof2}]`;
+
+        const txId = await executeTransition(
+          transitionName,
+          [agreementRecord, escrowRecord, noticeRecord, tokenRecord, `${amountMicro}u128`, proofsInput],
+          500_000,
+          'complete_job',
+          { agreementCommitment: commitment }
+        );
+
+        if (txId) {
+          await apiClient.completeEscrow({
+            agreementCommitment: commitment!,
+            txId,
+          });
+          await loadData();
+        }
+      } else {
+        // complete_job_usad(agreement, escrow, notice, pay_record, amount, proofs)
+        console.log('[complete] USAD flow — looking for Agreement record...');
+        const agreementRecord = await findLatestAgreement();
+        if (agreementRecord) {
+          console.log('[complete] Agreement found:', agreementRecord.slice(0, 300));
+        }
+
+        const agId = agreementRecord ? extractAgreementId(agreementRecord) : null;
+        console.log('[complete] Using agreement_id for filtering:', agId);
+
+        const isEscrowReceipt = (pt: string) => {
+          const hasEscrowCommitment = pt.includes('escrow_commitment:');
+          const hasClient = pt.includes('client:');
+          if (!hasEscrowCommitment || hasClient) return false;
+          if (agId) {
+            const ptAgId = extractAgreementId(pt);
+            if (ptAgId && ptAgId !== agId) return false;
+          }
+          return true;
+        };
+
+        const isDeliveryNotice = (pt: string) => {
+          const hasDeliverableHash = pt.includes('deliverable_hash:');
+          const hasSalary = pt.includes('salary:');
+          if (!hasDeliverableHash || hasSalary) return false;
+          if (agId) {
+            const ptAgId = extractAgreementId(pt);
+            if (ptAgId && ptAgId !== agId) return false;
+          }
+          return true;
+        };
+
+        console.log('[complete] Looking for EscrowReceipt (from commit_escrow_usad)...');
+        const escrowRecord = await findRecordWithRetry(
+          { functionName: 'commit_escrow_usad' }, undefined, isEscrowReceipt
+        );
+
+        console.log('[complete] Looking for DeliveryNotice (from submit_deliverable)...');
+        const noticeRecord = await findRecordWithRetry(
+          { functionName: 'submit_deliverable' }, undefined, isDeliveryNotice
+        );
+
+        if (!agreementRecord || !escrowRecord || !noticeRecord) {
+          const missing = [];
+          if (!agreementRecord) missing.push('agreement');
+          if (!escrowRecord) missing.push('escrow receipt');
+          if (!noticeRecord) missing.push('delivery notice');
+          setError(`Required records not found: ${missing.join(', ')}. Records may not have synced yet — try again in a few seconds.`);
+          setActionLoading('');
+          return;
+        }
+
+        // Find USAD Token record with sufficient balance
+        const amountMicro = BigInt(toMicroUSDCx(agreement.amount));
+        console.log('[complete] Looking for USAD Token record, need:', amountMicro.toString());
+        setStatusMessage('Looking for USAD token record...');
+        const tokenRecord = await findUsadRecord(amountMicro);
+        setStatusMessage('');
+        if (!tokenRecord) {
+          setError(`No USAD token with sufficient balance found. You need at least ${agreement.amount} USAD. Make sure you have USAD tokens in your wallet.`);
+          setActionLoading('');
+          return;
+        }
+        console.log('[complete] USAD Token found:', tokenRecord.slice(0, 200));
+
         const [proof1, proof2] = buildMerkleProofPair();
         const proofsInput = `[${proof1}, ${proof2}]`;
 
@@ -683,7 +783,7 @@ export const AgreementDetail: FC = () => {
                     const expectedDescHash = jobData
                       ? stringToField((jobData.title || '').trim() + '|' + (jobData.description || '').trim())
                       : null;
-                    const fnNames = ['submit_deliverable', 'deposit_escrow_aleo', 'commit_escrow_usdcx', 'create_agreement'];
+                    const fnNames = ['submit_deliverable', 'deposit_escrow_aleo', 'commit_escrow_usdcx', 'commit_escrow_usad', 'create_agreement'];
                     const filter = (pt: string): boolean => {
                       if (!isAgreementRecord(pt)) return false;
                       if (parseSalaryFromRecord(pt) !== expectedSalary) return false;

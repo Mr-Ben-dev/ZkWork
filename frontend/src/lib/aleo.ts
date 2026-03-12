@@ -1,4 +1,4 @@
-export const PROGRAM_ID = import.meta.env.VITE_ALEO_PROGRAM_ID || 'zkwork_private_v1.aleo';
+export const PROGRAM_ID = import.meta.env.VITE_ALEO_PROGRAM_ID || 'zkwork_private_v2.aleo';
 
 export const SCALING_FACTOR = 1_000_000;
 

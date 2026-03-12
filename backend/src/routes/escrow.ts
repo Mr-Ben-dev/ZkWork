@@ -6,7 +6,7 @@ import { hashAddress } from '../lib/crypto';
 import { getMappingValue } from '../services/provableApi';
 
 const router = Router();
-const PROGRAM_ID = process.env.ALEO_PROGRAM_ID || 'zkwork_private_v1.aleo';
+const PROGRAM_ID = process.env.ALEO_PROGRAM_ID || 'zkwork_private_v2.aleo';
 
 router.post('/deposit', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {

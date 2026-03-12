@@ -13,7 +13,7 @@ services:
       - key: CORS_ORIGIN
         sync: false
       - key: ALEO_PROGRAM_ID
-        value: zkwork_private_v1.aleo
+        value: zkwork_private_v2.aleo
       - key: PROVABLE_API_BASE
         value: https://api.explorer.provable.com/v1/testnet
     healthCheckPath: /health

@@ -23,7 +23,7 @@ export const PostJob: FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [budget, setBudget] = useState('');
-  const [currency, setCurrency] = useState<'aleo' | 'usdcx'>('aleo');
+  const [currency, setCurrency] = useState<'aleo' | 'usdcx' | 'usad'>('aleo');
   const [skills, setSkills] = useState<string[]>([]);
   const [deadline, setDeadline] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -47,6 +47,11 @@ export const PostJob: FC = () => {
     if (skills.length === 0) { setError('Select at least one skill'); return; }
     if (!deadline) { setError('Deadline is required'); return; }
 
+    const selectedDate = new Date(deadline);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (selectedDate <= today) { setError('Deadline must be a future date. Past dates cause escrow timeout rejections on-chain.'); return; }
+
     setError('');
     setSubmitting(true);
 
@@ -56,7 +61,7 @@ export const PostJob: FC = () => {
       const categoryHash = stringToField(skills.join(','));
       const budgetMicro = displayToMicro(parseFloat(budget));
       const deadlineBlock = Math.floor(new Date(deadline).getTime() / 1000);
-      const currencyCode = currency === 'aleo' ? '0u8' : '1u8';
+      const currencyCode = currency === 'aleo' ? '0u8' : currency === 'usdcx' ? '1u8' : '2u8';
 
       const txId = await executeTransition(
         'post_job',
@@ -172,7 +177,7 @@ export const PostJob: FC = () => {
             <div>
               <label className="block text-sm font-medium text-white/60 mb-2">Currency</label>
               <div className="flex gap-2">
-                {(['aleo', 'usdcx'] as const).map((c) => (
+                {(['aleo', 'usdcx', 'usad'] as const).map((c) => (
                   <button
                     key={c}
                     type="button"

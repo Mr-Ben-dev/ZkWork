@@ -4,7 +4,7 @@ import { apiClient } from '../lib/api';
 import { useUserStore } from '../stores/userStore';
 import { usePendingTxStore } from '../stores/pendingTxStore';
 
-const PROGRAM_ID = import.meta.env.VITE_ALEO_PROGRAM_ID || 'zkwork_private_v1.aleo';
+const PROGRAM_ID = import.meta.env.VITE_ALEO_PROGRAM_ID || 'zkwork_private_v2.aleo';
 
 let _authInProgress: Promise<boolean> | null = null;
 
@@ -421,6 +421,62 @@ export function useZKWorkWallet() {
   );
 
   /**
+   * Find a USAD Token record from test_usad_stablecoin.aleo with sufficient balance.
+   * Same structure as USDCx Token: { owner: address, amount: u128 }.
+   */
+  const findUsadRecord = useCallback(
+    async (minAmount: bigint): Promise<string | null> => {
+      const USAD_PID = 'test_usad_stablecoin.aleo';
+      const records = await decryptRecords(USAD_PID);
+      console.log(`[findUsadRecord] Found ${records.length} USAD records, need ${minAmount}`);
+
+      for (const record of records) {
+        if (!record || typeof record !== 'object') continue;
+        const rec = record as Record<string, unknown>;
+        if (rec.spent === true) continue;
+
+        let plaintext: string | null = null;
+        let amount = BigInt(0);
+
+        if (typeof rec.plaintext === 'string' && rec.plaintext.includes('{')) {
+          plaintext = rec.plaintext;
+        }
+
+        if (!plaintext && typeof rec.recordCiphertext === 'string' && rec.recordCiphertext.startsWith('record1')) {
+          try {
+            plaintext = await wallet.decrypt(rec.recordCiphertext);
+          } catch {
+            continue;
+          }
+        }
+
+        if (!plaintext) continue;
+
+        const amountMatch = plaintext.match(/amount\s*:\s*([\d_]+)u128/);
+        if (amountMatch) {
+          amount = BigInt(amountMatch[1].replace(/_/g, ''));
+        }
+
+        if (amount === BigInt(0)) {
+          const data = rec.data as Record<string, string> | undefined;
+          if (data?.amount) {
+            amount = BigInt(String(data.amount).replace(/u128|\.private/g, ''));
+          }
+        }
+
+        if (amount >= minAmount) {
+          console.log(`[findUsadRecord] Found USAD record with ${amount} (need ${minAmount})`);
+          return plaintext;
+        }
+      }
+
+      console.warn('[findUsadRecord] No USAD record with sufficient balance');
+      return null;
+    },
+    [decryptRecords, wallet.decrypt]
+  );
+
+  /**
    * Poll a single transaction until it reaches a terminal state.
    * Handles Shield's temp IDs by checking transactionStatus which
    * returns the real on-chain txId once available.
@@ -502,5 +558,6 @@ export function useZKWorkWallet() {
     findRecordWithRetry,
     findCreditsRecord,
     findTokenRecord,
+    findUsadRecord,
   };
 }

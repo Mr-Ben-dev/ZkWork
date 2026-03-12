@@ -1,7 +1,8 @@
 import credits.aleo;
 import test_usdcx_stablecoin.aleo;
+import test_usad_stablecoin.aleo;
 
-program zkwork_private_v1.aleo {
+program zkwork_private_v2.aleo {
 
     // ================================================================
     //                        RECORD TYPES
@@ -68,6 +69,7 @@ program zkwork_private_v1.aleo {
         owner: address,
         score: u64,
         completed_jobs: u64,
+        total_earned: u64,
         rep_commitment: field,
         nonce_seed: field
     }
@@ -97,7 +99,7 @@ program zkwork_private_v1.aleo {
     mapping agreement_active: field => bool;
     mapping escrow_active: field => bool;
     mapping delivery_submitted: field => bool;
-    mapping escrow_timestamps: field => u64;
+    mapping escrow_timestamps: field => field;
     mapping reputation_exists: field => bool;
 
     // ================================================================
@@ -106,31 +108,6 @@ program zkwork_private_v1.aleo {
 
     @noupgrade
     async constructor() {}
-
-    // ================================================================
-    //               WORKER SELF-REGISTRATION
-    // ================================================================
-
-    transition register_worker(
-        skills_hash: field,
-        bio_hash: field,
-        salt: field
-    ) -> WorkerProfile {
-        let profile_id: field = BHP256::hash_to_field(
-            self.signer as field + skills_hash + salt
-        );
-        let nonce: field = BHP256::hash_to_field(profile_id + bio_hash);
-
-        let profile: WorkerProfile = WorkerProfile {
-            owner: self.signer,
-            profile_id: profile_id,
-            skills_hash: skills_hash,
-            bio_hash: bio_hash,
-            nonce_seed: nonce
-        };
-
-        return profile;
-    }
 
     // ================================================================
     //                    JOB MANAGEMENT
@@ -144,7 +121,7 @@ program zkwork_private_v1.aleo {
         deadline_blocks: u64,
         salt: field
     ) -> (JobOffer, Future) {
-        assert(payment_type == 0u8 || payment_type == 1u8);
+        assert(payment_type == 0u8 || payment_type == 1u8 || payment_type == 2u8);
         assert(salary > 0u64);
 
         let job_id: field = BHP256::hash_to_field(
@@ -305,7 +282,8 @@ program zkwork_private_v1.aleo {
         let existing_escrow: bool = Mapping::get_or_use(escrow_active, agreement_commitment, false);
         assert(!existing_escrow);
         Mapping::set(escrow_active, agreement_commitment, true);
-        Mapping::set(escrow_timestamps, agreement_commitment, block.height as u64);
+        let height_hash: field = BHP256::hash_to_field(block.height as field);
+        Mapping::set(escrow_timestamps, agreement_commitment, height_hash);
     }
 
     // ================================================================
@@ -415,7 +393,7 @@ program zkwork_private_v1.aleo {
         Mapping::set(agreement_active, agreement_commitment, false);
         Mapping::set(escrow_active, agreement_commitment, false);
         Mapping::set(delivery_submitted, agreement_commitment, false);
-        Mapping::set(escrow_timestamps, agreement_commitment, 0u64);
+        Mapping::set(escrow_timestamps, agreement_commitment, 0field);
     }
 
     // ================================================================
@@ -423,7 +401,8 @@ program zkwork_private_v1.aleo {
     // ================================================================
 
     async transition refund_escrow_aleo(
-        escrow: EscrowReceipt
+        escrow: EscrowReceipt,
+        created_block: u64
     ) -> (credits.aleo/credits, Future) {
         assert_eq(escrow.owner, self.signer);
         assert_eq(escrow.payment_type, 0u8);
@@ -432,22 +411,24 @@ program zkwork_private_v1.aleo {
             credits.aleo/transfer_public_to_private(self.signer, escrow.amount);
 
         let agreement_commitment: field = BHP256::hash_to_field(escrow.agreement_id);
-        let f: Future = finalize_refund_escrow(transfer_f, agreement_commitment);
+        let f: Future = finalize_refund_escrow(transfer_f, agreement_commitment, created_block);
         return (buyer_credits, f);
     }
 
     async function finalize_refund_escrow(
         transfer_f: Future,
-        agreement_commitment: field
+        agreement_commitment: field,
+        created_block: u64
     ) {
         let escrowed: bool = Mapping::get_or_use(escrow_active, agreement_commitment, false);
         assert(escrowed);
-        let created_at: u64 = Mapping::get(escrow_timestamps, agreement_commitment);
-        assert(created_at > 0u64);
-        assert((block.height as u64) >= created_at + 1000u64);
+        let stored_hash: field = Mapping::get(escrow_timestamps, agreement_commitment);
+        let expected_hash: field = BHP256::hash_to_field(created_block as field);
+        assert_eq(stored_hash, expected_hash);
+        assert((block.height as u64) >= created_block + 1000u64);
         transfer_f.await();
         Mapping::set(escrow_active, agreement_commitment, false);
-        Mapping::set(escrow_timestamps, agreement_commitment, 0u64);
+        Mapping::set(escrow_timestamps, agreement_commitment, 0field);
     }
 
     // ================================================================
@@ -499,7 +480,8 @@ program zkwork_private_v1.aleo {
         let existing: bool = Mapping::get_or_use(escrow_active, agreement_commitment, false);
         assert(!existing);
         Mapping::set(escrow_active, agreement_commitment, true);
-        Mapping::set(escrow_timestamps, agreement_commitment, block.height as u64);
+        let height_hash: field = BHP256::hash_to_field(block.height as field);
+        Mapping::set(escrow_timestamps, agreement_commitment, height_hash);
     }
 
     // ================================================================
@@ -571,28 +553,154 @@ program zkwork_private_v1.aleo {
         Mapping::set(agreement_active, agreement_commitment, false);
         Mapping::set(escrow_active, agreement_commitment, false);
         Mapping::set(delivery_submitted, agreement_commitment, false);
-        Mapping::set(escrow_timestamps, agreement_commitment, 0u64);
+        Mapping::set(escrow_timestamps, agreement_commitment, 0field);
     }
 
     // ================================================================
-    //          CANCEL USDCx ESCROW (no funds locked)
+    //     CANCEL STABLECOIN ESCROW (USDCx or USAD — no funds locked)
     // ================================================================
 
-    async transition cancel_escrow_usdcx(
+    async transition cancel_escrow_stable(
         escrow: EscrowReceipt
     ) -> Future {
         assert_eq(escrow.owner, self.signer);
-        assert_eq(escrow.payment_type, 1u8);
+        // Must be a stablecoin escrow (USDCx=1 or USAD=2), not ALEO
+        assert_neq(escrow.payment_type, 0u8);
         let agreement_commitment: field = BHP256::hash_to_field(escrow.agreement_id);
-        let f: Future = finalize_cancel_escrow_usdcx(agreement_commitment);
+        let f: Future = finalize_cancel_escrow_stable(agreement_commitment);
         return f;
     }
 
-    async function finalize_cancel_escrow_usdcx(agreement_commitment: field) {
+    async function finalize_cancel_escrow_stable(agreement_commitment: field) {
         let escrowed: bool = Mapping::get_or_use(escrow_active, agreement_commitment, false);
         assert(escrowed);
         Mapping::set(escrow_active, agreement_commitment, false);
-        Mapping::set(escrow_timestamps, agreement_commitment, 0u64);
+        Mapping::set(escrow_timestamps, agreement_commitment, 0field);
+    }
+
+    // ================================================================
+    //        USAD ESCROW COMMITMENT (signal-only, no token lock)
+    // ================================================================
+
+    async transition commit_escrow_usad(
+        agreement: Agreement
+    ) -> (Agreement, EscrowReceipt, Future) {
+        assert_eq(agreement.owner, self.signer);
+        assert_eq(agreement.client, self.signer);
+        assert_eq(agreement.payment_type, 2u8);
+
+        let agreement_commitment: field = BHP256::hash_to_field(agreement.agreement_id);
+        let escrow_commitment: field = BHP256::hash_to_field(
+            agreement.agreement_id + agreement.salary as field
+        );
+        let nonce: field = BHP256::hash_to_field(escrow_commitment + self.signer as field);
+
+        let receipt: EscrowReceipt = EscrowReceipt {
+            owner: self.signer,
+            agreement_id: agreement.agreement_id,
+            amount: agreement.salary,
+            worker: agreement.worker,
+            payment_type: 2u8,
+            escrow_commitment: escrow_commitment,
+            nonce_seed: nonce
+        };
+
+        let updated_agreement: Agreement = Agreement {
+            owner: self.signer,
+            agreement_id: agreement.agreement_id,
+            job_id: agreement.job_id,
+            worker: agreement.worker,
+            client: agreement.client,
+            salary: agreement.salary,
+            payment_type: agreement.payment_type,
+            description_hash: agreement.description_hash,
+            nonce_seed: BHP256::hash_to_field(agreement.nonce_seed + 1field)
+        };
+
+        let f: Future = finalize_commit_escrow_usad(agreement_commitment);
+        return (updated_agreement, receipt, f);
+    }
+
+    async function finalize_commit_escrow_usad(agreement_commitment: field) {
+        let active: bool = Mapping::get_or_use(agreement_active, agreement_commitment, false);
+        assert(active);
+        let existing: bool = Mapping::get_or_use(escrow_active, agreement_commitment, false);
+        assert(!existing);
+        Mapping::set(escrow_active, agreement_commitment, true);
+        let height_hash: field = BHP256::hash_to_field(block.height as field);
+        Mapping::set(escrow_timestamps, agreement_commitment, height_hash);
+    }
+
+    // ================================================================
+    //    COMPLETE JOB (USAD) — ATOMIC: payment + completion receipts
+    // ================================================================
+
+    async transition complete_job_usad(
+        agreement: Agreement,
+        escrow: EscrowReceipt,
+        notice: DeliveryNotice,
+        pay_record: test_usad_stablecoin.aleo/Token,
+        amount: u128,
+        private proofs: [MerkleProof; 2]
+    ) -> (CompletionReceipt, CompletionReceipt, test_usad_stablecoin.aleo/Token, test_usad_stablecoin.aleo/Token, test_usad_stablecoin.aleo/ComplianceRecord, Future) {
+        assert_eq(agreement.owner, self.signer);
+        assert_eq(agreement.client, self.signer);
+        assert_eq(escrow.owner, self.signer);
+        assert_eq(notice.owner, self.signer);
+        assert_eq(escrow.payment_type, 2u8);
+        assert_eq(agreement.agreement_id, escrow.agreement_id);
+        assert_eq(agreement.agreement_id, notice.agreement_id);
+
+        let (compliance, token_worker, token_change, transfer_f): (
+            test_usad_stablecoin.aleo/ComplianceRecord,
+            test_usad_stablecoin.aleo/Token,
+            test_usad_stablecoin.aleo/Token,
+            Future
+        ) = test_usad_stablecoin.aleo/transfer_private(escrow.worker, amount, pay_record, proofs);
+
+        let nonce_client: field = BHP256::hash_to_field(
+            agreement.agreement_id + self.signer as field + 5field
+        );
+        let nonce_worker: field = BHP256::hash_to_field(
+            agreement.agreement_id + escrow.worker as field + 5field
+        );
+
+        let client_receipt: CompletionReceipt = CompletionReceipt {
+            owner: self.signer,
+            agreement_id: agreement.agreement_id,
+            deliverable_hash: notice.deliverable_hash,
+            salary: amount as u64,
+            nonce_seed: nonce_client
+        };
+
+        let worker_receipt: CompletionReceipt = CompletionReceipt {
+            owner: escrow.worker,
+            agreement_id: agreement.agreement_id,
+            deliverable_hash: notice.deliverable_hash,
+            salary: amount as u64,
+            nonce_seed: nonce_worker
+        };
+
+        let agreement_commitment: field = BHP256::hash_to_field(agreement.agreement_id);
+        let f: Future = finalize_complete_job_usad(transfer_f, agreement_commitment);
+        return (client_receipt, worker_receipt, token_worker, token_change, compliance, f);
+    }
+
+    async function finalize_complete_job_usad(
+        transfer_f: Future,
+        agreement_commitment: field
+    ) {
+        let active: bool = Mapping::get_or_use(agreement_active, agreement_commitment, false);
+        assert(active);
+        let escrowed: bool = Mapping::get_or_use(escrow_active, agreement_commitment, false);
+        assert(escrowed);
+        let delivered: bool = Mapping::get_or_use(delivery_submitted, agreement_commitment, false);
+        assert(delivered);
+        transfer_f.await();
+        Mapping::set(agreement_active, agreement_commitment, false);
+        Mapping::set(escrow_active, agreement_commitment, false);
+        Mapping::set(delivery_submitted, agreement_commitment, false);
+        Mapping::set(escrow_timestamps, agreement_commitment, 0field);
     }
 
     // ================================================================
@@ -611,6 +719,7 @@ program zkwork_private_v1.aleo {
             owner: self.signer,
             score: 1u64,
             completed_jobs: 1u64,
+            total_earned: receipt.salary,
             rep_commitment: rep_commitment,
             nonce_seed: nonce
         };
@@ -632,6 +741,7 @@ program zkwork_private_v1.aleo {
 
         let new_score: u64 = existing.score + 1u64;
         let new_jobs: u64 = existing.completed_jobs + 1u64;
+        let new_earned: u64 = existing.total_earned + receipt.salary;
         let new_commitment: field = BHP256::hash_to_field(
             self.signer as field + new_score as field
         );
@@ -641,6 +751,7 @@ program zkwork_private_v1.aleo {
             owner: self.signer,
             score: new_score,
             completed_jobs: new_jobs,
+            total_earned: new_earned,
             rep_commitment: new_commitment,
             nonce_seed: nonce
         };
@@ -687,6 +798,7 @@ program zkwork_private_v1.aleo {
             owner: self.signer,
             score: rep.score,
             completed_jobs: rep.completed_jobs,
+            total_earned: rep.total_earned,
             rep_commitment: rep.rep_commitment,
             nonce_seed: BHP256::hash_to_field(rep.nonce_seed + 1field)
         };
@@ -699,4 +811,5 @@ program zkwork_private_v1.aleo {
         let exists: bool = Mapping::get_or_use(reputation_exists, rep_commitment, false);
         assert(exists);
     }
+
 }

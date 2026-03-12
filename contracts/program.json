@@ -1,5 +1,5 @@
 {
-    "program": "zkwork_private_v1.aleo",
+    "program": "zkwork_private_v2.aleo",
     "version": "0.1.0",
     "description": "Privacy-first freelance marketplace with ZK reputation and atomic escrow",
     "license": "MIT",
@@ -11,6 +11,11 @@
         },
         {
             "name": "test_usdcx_stablecoin.aleo",
+            "location": "network",
+            "network": "testnet"
+        },
+        {
+            "name": "test_usad_stablecoin.aleo",
             "location": "network",
             "network": "testnet"
         }
