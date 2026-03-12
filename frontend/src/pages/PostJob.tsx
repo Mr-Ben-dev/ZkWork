@@ -38,8 +38,8 @@ export const PostJob: FC = () => {
   const handleSubmit = async () => {
     if (!connected) return;
     if (!isAuthenticated) {
-      await authenticate();
-      return;
+      const ok = await authenticate();
+      if (!ok) { setError('Authentication failed. Please try again.'); return; }
     }
     if (!title.trim()) { setError('Title is required'); return; }
     if (!description.trim()) { setError('Description is required'); return; }
@@ -86,7 +86,7 @@ export const PostJob: FC = () => {
 
       const commitment = salt;
 
-      await apiClient.createJob({
+      const jobPayload = {
         commitment,
         title: title.trim(),
         description: description.trim(),
@@ -95,7 +95,23 @@ export const PostJob: FC = () => {
         skills,
         deadline,
         txId,
-      });
+      };
+
+      try {
+        await apiClient.createJob(jobPayload);
+      } catch (apiErr: any) {
+        // Token may have expired during the long on-chain TX — re-auth and retry
+        if (apiErr.message?.includes('expired') || apiErr.message?.includes('401')) {
+          const reauthed = await authenticate();
+          if (reauthed) {
+            await apiClient.createJob(jobPayload);
+          } else {
+            throw new Error('Transaction succeeded on-chain but failed to save. Re-authenticate and visit Dashboard to sync.');
+          }
+        } else {
+          throw apiErr;
+        }
+      }
 
       navigate('/jobs');
     } catch (err: any) {

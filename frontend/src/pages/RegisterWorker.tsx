@@ -37,8 +37,8 @@ export const RegisterWorker: FC = () => {
   const handleSubmit = async () => {
     if (!connected) return;
     if (!isAuthenticated) {
-      await authenticate();
-      return;
+      const ok = await authenticate();
+      if (!ok) { setError('Authentication failed. Please try again.'); return; }
     }
     if (skills.length === 0) {
       setError('Select at least one skill');

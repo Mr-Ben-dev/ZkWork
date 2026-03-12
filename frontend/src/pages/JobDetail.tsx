@@ -47,8 +47,8 @@ export const JobDetail: FC = () => {
 
   const handleApply = async () => {
     if (!connected || !isAuthenticated) {
-      await authenticate();
-      return;
+      const ok = await authenticate();
+      if (!ok) { setError('Authentication failed. Please try again.'); return; }
     }
     if (!coverLetter.trim()) { setError('Cover letter required'); return; }
     if (!proposedRate || parseFloat(proposedRate) <= 0) { setError('Rate must be positive'); return; }
