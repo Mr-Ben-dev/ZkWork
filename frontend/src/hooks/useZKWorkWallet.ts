@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useWallet } from '@provablehq/aleo-wallet-adaptor-react';
+import { Network } from '@provablehq/aleo-types';
 import { apiClient } from '../lib/api';
 import { useUserStore } from '../stores/userStore';
 import { usePendingTxStore } from '../stores/pendingTxStore';
@@ -24,7 +25,28 @@ export function useZKWorkWallet() {
       try {
         const { nonce, message } = await apiClient.getNonce(walletAddress);
         const messageBytes = new TextEncoder().encode(message);
-        const signResult = await wallet.signMessage(messageBytes);
+
+        let signResult: unknown = null;
+        for (let attempt = 0; attempt <= 1; attempt++) {
+          try {
+            signResult = await wallet.signMessage(messageBytes);
+            break;
+          } catch (signErr: unknown) {
+            const errMsg = signErr instanceof Error ? signErr.message : String(signErr);
+            const isNoResponse = /no response|receiving end does not exist|could not establish connection/i.test(errMsg);
+            if (isNoResponse && attempt === 0) {
+              console.warn('[Auth] No response on signMessage, reconnecting...');
+              try {
+                if (wallet.disconnect) await wallet.disconnect();
+                await new Promise((r) => setTimeout(r, 1000));
+                await wallet.connect(Network.TESTNET);
+                await new Promise((r) => setTimeout(r, 1500));
+              } catch { /* ignore */ }
+              continue;
+            }
+            throw signErr;
+          }
+        }
 
         let signatureString: string;
         if (!signResult) {
@@ -52,7 +74,7 @@ export function useZKWorkWallet() {
     } finally {
       _authInProgress = null;
     }
-  }, [wallet.connected, walletAddress, wallet.signMessage, setUser]);
+  }, [wallet.connected, walletAddress, wallet.signMessage, wallet.connect, wallet.disconnect, setUser]);
 
   const disconnect = useCallback(() => {
     localStorage.removeItem('zkwork_token');
@@ -73,52 +95,88 @@ export function useZKWorkWallet() {
         return null;
       }
 
-      try {
-        const txResult = await wallet.executeTransaction({
-          program: PROGRAM_ID,
-          function: transitionName,
-          inputs,
-          fee,
-          privateFee: false,
-        });
-
-        const tempTxId = txResult?.transactionId ?? null;
-
-        if (tempTxId) {
-          addPendingTx({
-            id: tempTxId,
-            type: txType,
-            status: 'pending',
-            createdAt: new Date().toISOString(),
-            meta,
+      const MAX_RETRIES = 2;
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          const txResult = await wallet.executeTransaction({
+            program: PROGRAM_ID,
+            function: transitionName,
+            inputs,
+            fee,
+            privateFee: false,
           });
 
-          // Auto-start polling for this transaction
-          pollTransactionUntilDone(tempTxId);
-        }
+          const tempTxId = txResult?.transactionId ?? null;
 
-        return tempTxId;
-      } catch (err) {
-        console.error(`[Wallet] Transition ${transitionName} failed:`, err);
-        return null;
+          if (tempTxId) {
+            addPendingTx({
+              id: tempTxId,
+              type: txType,
+              status: 'pending',
+              createdAt: new Date().toISOString(),
+              meta,
+            });
+
+            // Auto-start polling for this transaction
+            pollTransactionUntilDone(tempTxId);
+          }
+
+          return tempTxId;
+        } catch (err: unknown) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          const isNoResponse = /no response|receiving end does not exist|could not establish connection/i.test(errMsg);
+
+          if (isNoResponse && attempt < MAX_RETRIES) {
+            console.warn(`[Wallet] No response on attempt ${attempt + 1}, reconnecting wallet...`);
+            try {
+              if (wallet.disconnect) await wallet.disconnect();
+              await new Promise((r) => setTimeout(r, 1000));
+              await wallet.connect(Network.TESTNET);
+              await new Promise((r) => setTimeout(r, 1500));
+              console.log('[Wallet] Reconnected, retrying transaction...');
+            } catch (reconnectErr) {
+              console.warn('[Wallet] Reconnect failed:', reconnectErr);
+            }
+            continue;
+          }
+
+          console.error(`[Wallet] Transition ${transitionName} failed:`, err);
+          return null;
+        }
       }
+      return null;
     },
-    [wallet.executeTransaction, addPendingTx]
+    [wallet.executeTransaction, wallet.connect, wallet.disconnect, addPendingTx]
   );
 
   const decryptRecords = useCallback(
     async (programId?: string): Promise<unknown[]> => {
       const pid = programId || PROGRAM_ID;
-      try {
-        const records = await wallet.requestRecords(pid, true);
-        if (Array.isArray(records)) return records;
-        return [];
-      } catch (err) {
-        console.error('[Wallet] Record decryption failed:', err);
-        return [];
+      for (let attempt = 0; attempt <= 1; attempt++) {
+        try {
+          const records = await wallet.requestRecords(pid, true);
+          if (Array.isArray(records)) return records;
+          return [];
+        } catch (err: unknown) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          const isNoResponse = /no response|receiving end does not exist|could not establish connection/i.test(errMsg);
+          if (isNoResponse && attempt === 0) {
+            console.warn('[Wallet] No response on requestRecords, reconnecting...');
+            try {
+              if (wallet.disconnect) await wallet.disconnect();
+              await new Promise((r) => setTimeout(r, 1000));
+              await wallet.connect(Network.TESTNET);
+              await new Promise((r) => setTimeout(r, 1500));
+            } catch { /* ignore reconnect errors */ }
+            continue;
+          }
+          console.error('[Wallet] Record decryption failed:', err);
+          return [];
+        }
       }
+      return [];
     },
-    [wallet.requestRecords]
+    [wallet.requestRecords, wallet.connect, wallet.disconnect]
   );
 
   /**

@@ -4,8 +4,7 @@ import { motion } from 'framer-motion';
 import { useZKWorkWallet } from '../hooks/useZKWorkWallet';
 import { useUserStore } from '../stores/userStore';
 import { apiClient } from '../lib/api';
-import { displayToMicro } from '../lib/aleo';
-import { stringToField, randomField } from '../lib/commitment';
+import { randomField } from '../lib/commitment';
 import { AnonAvatar } from '../components/icons';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { AnimatedBackground } from '../components/ui/AnimatedBackground';
@@ -18,7 +17,7 @@ const SKILL_OPTIONS = [
 
 export const RegisterWorker: FC = () => {
   const navigate = useNavigate();
-  const { walletAddress, connected, executeTransition, authenticate } = useZKWorkWallet();
+  const { walletAddress, connected, authenticate } = useZKWorkWallet();
   const { isAuthenticated } = useUserStore();
 
   const [skills, setSkills] = useState<string[]>([]);
@@ -58,23 +57,6 @@ export const RegisterWorker: FC = () => {
 
     try {
       const salt = randomField();
-      const skillsHash = stringToField(skills.join(','));
-      const bioHash = stringToField(bio.trim());
-
-      const txId = await executeTransition(
-        'register_worker',
-        [skillsHash, bioHash, salt],
-        500_000,
-        'register_worker',
-        { skills, bio }
-      );
-
-      if (!txId) {
-        setError('Transaction was rejected by the wallet');
-        setSubmitting(false);
-        return;
-      }
-
       const commitment = salt;
 
       await apiClient.registerWorker({
@@ -83,7 +65,7 @@ export const RegisterWorker: FC = () => {
         bio: bio.trim(),
         ratePerHour: parseFloat(ratePerHour),
         currency,
-        txId,
+        txId: `local_${Date.now()}`,
       });
 
       navigate('/dashboard');

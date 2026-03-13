@@ -79,7 +79,7 @@ export const PostJob: FC = () => {
       );
 
       if (!txId) {
-        setError('Transaction was rejected by the wallet');
+        setError('Wallet did not respond. Please refresh the page, reconnect your wallet, and try again.');
         setSubmitting(false);
         return;
       }
