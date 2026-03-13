@@ -21,9 +21,10 @@
 
 **ZKWork** is a fully on-chain freelance marketplace built on the [Aleo](https://aleo.org) blockchain. Every action — from posting a job to releasing payment — executes as a zero-knowledge transition, ensuring that user identities, payment amounts, and work history remain private.
 
-The platform supports two payment methods:
+The platform supports three payment methods:
 - **ALEO** — Native credits with on-chain escrow locking
 - **USDCx** — Stablecoin via `test_usdcx_stablecoin.aleo` with fully private transfers
+- **USAD** — Aleo-native stablecoin via `test_usad_stablecoin.aleo` with fully private transfers
 
 Workers build **private reputation** by claiming on-chain `CompletionReceipt` records. They can then generate **zero-knowledge threshold proofs** — proving they've completed at least _N_ jobs to any verifier without revealing their exact count or identity.
 
@@ -31,9 +32,10 @@ Workers build **private reputation** by claiming on-chain `CompletionReceipt` re
 
 | Property | Value |
 |----------|-------|
-| Program ID | `zkwork_private_v1.aleo` |
+| Program ID | `zkwork_private_v2.aleo` |
 | Network | Aleo Testnet |
-| Dependencies | `credits.aleo`, `test_usdcx_stablecoin.aleo` |
+| Dependencies | `credits.aleo`, `test_usdcx_stablecoin.aleo`, `test_usad_stablecoin.aleo` |
+| Deployment TX | `at1xqcz3gq7hdex3qyrdva4psg6722mtdd7kmll6gg7uz9apzcrwczsnvdcqk` |
 
 ---
 
@@ -46,15 +48,16 @@ Workers build **private reputation** by claiming on-chain `CompletionReceipt` re
 │                                                                  │
 │  ┌────────────┐  ┌────────────┐  ┌─────────────┐  ┌──────────┐ │
 │  │  Job Board │  │  Post Job  │  │  Agreements  │  │Reputation│ │
-│  │            │  │ (ALEO/USDCx│  │   Detail     │  │  Claim   │ │
-│  │  Browse &  │  │  on-chain) │  │  Escrow Ops  │  │  Merge   │ │
+│  │            │  │(ALEO/USDCx/│  │   Detail     │  │  Claim   │ │
+│  │  Browse &  │  │USAD on-chn)│  │  Escrow Ops  │  │  Merge   │ │
 │  │  Apply     │  │            │  │  Deliverable │  │  Prove   │ │
 │  └────────────┘  └────────────┘  └─────────────┘  └──────────┘ │
 │                                                                  │
 │  ┌──────────────────────────────────────────────────────────────┐│
 │  │  useZKWorkWallet Hook                                        ││
 │  │  • executeTransition  • findRecord  • findCreditsRecord      ││
-│  │  • findTokenRecord    • authenticate • pollTransaction       ││
+│  │  • findTokenRecord   • findUsadRecord • authenticate         ││
+│  │  • pollTransaction                                           ││
 │  └──────────────────────────────────────────────────────────────┘│
 │                          │                                       │
 │                    Shield Wallet                                  │
@@ -83,7 +86,7 @@ Workers build **private reputation** by claiming on-chain `CompletionReceipt` re
 │                    ALEO BLOCKCHAIN                                │
 │                                                                   │
 │  ┌─────────────────────────────────────────────────────────────┐ │
-│  │  zkwork_private_v1.aleo                                      │ │
+│  │  zkwork_private_v2.aleo                                      │ │
 │  │                                                               │ │
 │  │  Records: WorkerProfile · JobOffer · Agreement               │ │
 │  │           EscrowReceipt · DeliveryNotice · CompletionReceipt │ │
@@ -94,10 +97,10 @@ Workers build **private reputation** by claiming on-chain `CompletionReceipt` re
 │  │            reputation_exists                                  │ │
 │  └─────────────────────────────────────────────────────────────┘ │
 │                                                                   │
-│  ┌───────────────────┐  ┌─────────────────────────────────────┐ │
-│  │   credits.aleo    │  │  test_usdcx_stablecoin.aleo         │ │
-│  │  (Native ALEO)    │  │  (USDCx Stablecoin Transfers)       │ │
-│  └───────────────────┘  └─────────────────────────────────────┘ │
+│  ┌───────────────┐ ┌──────────────────────┐ ┌───────────────┐ │
+│  │ credits.aleo   │ │test_usdcx_stablecoin │ │test_usad_     │ │
+│  │ (Native ALEO)  │ │  (USDCx Transfers)   │ │stablecoin.aleo│ │
+│  └───────────────┘ └──────────────────────┘ └───────────────┘ │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -161,6 +164,31 @@ Workers build **private reputation** by claiming on-chain `CompletionReceipt` re
    │                                 │                                │
 ```
 
+### USAD Stablecoin Flow
+
+```
+ Client                          Blockchain                        Worker
+   │                                 │                                │
+   │  1. post_job(salary, 2u8)       │                                │
+   │────────────────────────────────>│  JobOffer (payment_type=2)     │
+   │                                 │                                │
+   │  2-3. Agreement creation        │  (same as ALEO)               │
+   │                                 │                                │
+   │  4. commit_escrow_usad          │                                │
+   │────────────────────────────────>│  EscrowReceipt (signal-only)   │
+   │                                 │  No tokens locked yet          │
+   │                                 │                                │
+   │                                 │  5. submit_deliverable(hash)   │
+   │                                 │<───────────────────────────────│
+   │                                 │                                │
+   │  6. complete_job_usad(Token, proofs)                             │
+   │────────────────────────────────>│  USAD transfer_private         │
+   │                                 │  CompletionReceipt ×2          │
+   │                                 │  Worker receives Token record  │
+   │                                 │  ComplianceRecord produced     │
+   │                                 │                                │
+```
+
 ### ZK Reputation Flow
 
 ```
@@ -185,7 +213,7 @@ Workers build **private reputation** by claiming on-chain `CompletionReceipt` re
 
 ---
 
-## Smart Contract — `zkwork_private_v1.aleo`
+## Smart Contract — `zkwork_private_v2.aleo`
 
 ### Record Types
 
@@ -197,26 +225,27 @@ Workers build **private reputation** by claiming on-chain `CompletionReceipt` re
 | **EscrowReceipt** | `agreement_id`, `amount`, `worker`, `payment_type`, `escrow_commitment` | Client |
 | **DeliveryNotice** | `agreement_id`, `deliverable_hash`, `worker` | Client |
 | **CompletionReceipt** | `agreement_id`, `deliverable_hash`, `salary` | Client & Worker |
-| **ReputationRecord** | `score`, `completed_jobs`, `rep_commitment` | Worker |
+| **ReputationRecord** | `score`, `completed_jobs`, `total_earned`, `rep_commitment` | Worker |
 | **ThresholdProof** | `worker_commitment`, `threshold`, `verified` | Verifier |
 
 ### Transitions
 
 | Transition | Purpose | Payment |
 |-----------|---------|---------|
-| `register_worker` | Create anonymous worker profile | — |
 | `post_job` | Post job with salary and deadline | — |
 | `cancel_job` | Remove job listing | — |
 | `create_agreement` | Bind client + worker, produce Agreement records for both | — |
 | `deposit_escrow_aleo` | Lock ALEO credits on-chain | ALEO |
 | `commit_escrow_usdcx` | Signal escrow commitment (no lock) | USDCx |
+| `commit_escrow_usad` | Signal USAD escrow commitment (no lock) | USAD |
 | `submit_deliverable` | Worker submits deliverable hash | — |
 | `complete_job_aleo` | Release ALEO to worker + CompletionReceipts | ALEO |
 | `complete_job_usdcx` | Transfer USDCx to worker + CompletionReceipts | USDCx |
-| `refund_escrow_aleo` | Refund ALEO after 1000-block timeout | ALEO |
-| `cancel_escrow_usdcx` | Cancel USDCx commitment | USDCx |
-| `claim_reputation` | First reputation claim (score = 1) | — |
-| `merge_reputation` | Merge new claim into existing (score + 1) | — |
+| `complete_job_usad` | Transfer USAD to worker + CompletionReceipts | USAD |
+| `refund_escrow_aleo` | Refund ALEO after timeout (hash-verified) | ALEO |
+| `cancel_escrow_stable` | Cancel USDCx or USAD escrow commitment | USDCx/USAD |
+| `claim_reputation` | First reputation claim (score=1, total_earned=salary) | — |
+| `merge_reputation` | Merge new claim into existing (score+1, total_earned accumulated) | — |
 | `prove_threshold` | ZK proof: score ≥ threshold → ThresholdProof to verifier | — |
 
 ### On-Chain Mappings
@@ -227,7 +256,7 @@ Workers build **private reputation** by claiming on-chain `CompletionReceipt` re
 | `agreement_active` | `field → bool` | Track active agreements |
 | `escrow_active` | `field → bool` | Track locked escrows |
 | `delivery_submitted` | `field → bool` | Track submitted deliverables |
-| `escrow_timestamps` | `field → u64` | Block height for refund timeout |
+| `escrow_timestamps` | `field → field` | BHP256-hashed block height for refund timeout |
 | `reputation_exists` | `field → bool` | Track reputation commitments |
 
 ---
@@ -372,7 +401,7 @@ zkwork/
 | **Identity** | Never exposed on-chain. Backend stores SHA-256 hashed addresses. Transitions use `self.signer` privately. |
 | **Amounts** | Stored in private records only. Public mappings track boolean existence only. |
 | **ALEO Escrow** | Private → Public → Private transfer. Only boolean `escrow_active` visible on-chain. |
-| **USDCx Payments** | Fully private `transfer_private`. No public trace of amounts or parties. |
+| **USDCx/USAD Payments** | Fully private `transfer_private`. No public trace of amounts or parties. |
 | **Reputation** | Score in private record. `prove_threshold` reveals only `score ≥ N`, not exact value. |
 | **Deliverables** | Only hash stored on-chain. Actual content remains off-chain. |
 | **Agreements** | Private records. No public link between client and worker addresses. |
@@ -410,6 +439,7 @@ zkwork/
 | Aleo Testnet | Deployment network |
 | `credits.aleo` | Native ALEO token operations |
 | `test_usdcx_stablecoin.aleo` | USDCx stablecoin transfers |
+| `test_usad_stablecoin.aleo` | USAD stablecoin transfers |
 | BHP256 | On-chain commitment hashing |
 
 ---
@@ -446,14 +476,14 @@ npm install
 PORT=3001
 JWT_SECRET=your_secret_here
 CORS_ORIGIN=http://localhost:5173
-ALEO_PROGRAM_ID=zkwork_private_v1.aleo
+ALEO_PROGRAM_ID=zkwork_private_v2.aleo
 PROVABLE_API_BASE=https://api.explorer.provable.com/v1/testnet
 ```
 
 **Frontend `.env`:**
 ```
 VITE_API_BASE=http://localhost:3001/api
-VITE_ALEO_PROGRAM_ID=zkwork_private_v1.aleo
+VITE_ALEO_PROGRAM_ID=zkwork_private_v2.aleo
 ```
 
 ### Development
@@ -516,13 +546,13 @@ Set `VITE_API_BASE` to your backend URL before building.
 
 | Decision | Rationale |
 |----------|-----------|
-| **Two payment types (ALEO / USDCx)** | ALEO for native token escrow with on-chain locking; USDCx for stablecoin payments with atomic transfer at completion |
-| **Signal-only USDCx escrow** | `test_usdcx_stablecoin.aleo` doesn't support public escrow, so commitment is recorded on-chain while transfer happens atomically at completion |
+| **Three payment types (ALEO / USDCx / USAD)** | ALEO for native token escrow with on-chain locking; USDCx and USAD for stablecoin payments with atomic transfer at completion |
+| **Signal-only USDCx/USAD escrow** | `test_usdcx_stablecoin.aleo` and `test_usad_stablecoin.aleo` don't support public escrow, so commitment is recorded on-chain while transfer happens atomically at completion |
 | **Dual Agreement records** | Both client and worker receive their own private copy of every Agreement record |
 | **BHP256 commitments** | All on-chain identifiers use BHP256 hash-to-field for unlinkable commitments |
 | **Separate claim/merge reputation** | First claim creates a new ReputationRecord; subsequent ones merge into existing to maintain a single record |
 | **ThresholdProof to verifier** | The proof record is owned by the verifier address, allowing them to verify privately without the worker's involvement |
-| **1,000,000 scaling factor** | Both ALEO and USDCx use 6 decimal places (micro-units) for precision |
+| **Hashed escrow timestamps** | Refund timeout block heights stored as BHP256 hashes (`field → field`) — even timeout data is not readable on-chain |
 | **LowDB for backend** | Lightweight JSON persistence suitable for prototype; easily replaceable with PostgreSQL for production |
 
 ---
@@ -531,7 +561,7 @@ Set `VITE_API_BASE` to your backend URL before building.
 
 ### Where We Are
 
-ZKWork is a working product, not a pitch deck. The MVP is deployed on Aleo Testnet with a 14-transition Leo smart contract (`zkwork_private_v1.aleo`), dual-currency payments (ALEO + USDCx), atomic on-chain escrow, a ZK reputation system with threshold proofs, Shield Wallet integration, and a production frontend + backend running live. Every flow — from posting a job to releasing escrowed payment to proving reputation — works end-to-end on-chain.
+ZKWork is a working product, not a pitch deck. The MVP is deployed on Aleo Testnet with a 15-transition Leo smart contract (`zkwork_private_v2.aleo`), tri-currency payments (ALEO + USDCx + USAD), atomic on-chain escrow, a ZK reputation system with weighted scoring and threshold proofs, Shield Wallet integration, and a production frontend + backend running live. Every flow — from posting a job to releasing escrowed payment to proving reputation — works end-to-end on-chain.
 
 This section outlines what we are building next (concrete, scoped, in progress) and where ZKWork is headed beyond that (strategic direction, dependent on traction and feedback).
 
@@ -541,28 +571,31 @@ This section outlines what we are building next (concrete, scoped, in progress) 
 
 These are the items we are actively working on. Each is scoped to be implementable within the current buildathon cycle, and each directly strengthens the core product.
 
-#### Third Currency: USAD
+#### ✅ Third Currency: USAD (DONE)
 
-- Add `USAD` as a payment option alongside ALEO and USDCx
-- Extend the Leo contract with a `payment_type = 2u8` code path — same atomic-at-completion model already proven with USDCx via `transfer_private`
+- Added `USAD` as a payment option alongside ALEO and USDCx — **deployed in `zkwork_private_v2.aleo`**
+- Leo contract extended with `payment_type = 2u8` code path — same atomic-at-completion model as USDCx via `transfer_private`
 - Clients select ALEO, USDCx, or USAD at job creation. Three currencies cover native volatile (ALEO), established stable (USDCx), and Aleo-native stable (USAD)
-- Frontend and backend already support multi-currency selection — adding USAD requires a new contract transition pair (`commit_escrow_usad` / `complete_job_usad`) and token record handling in the wallet hook
+- New transitions: `commit_escrow_usad`, `complete_job_usad`, `cancel_escrow_stable` (merged cancel for USDCx + USAD)
+- Frontend: PostJob USAD option, AgreementDetail USAD deposit/complete/cancel flows, `findUsadRecord` in wallet hook
+- Backend: `'usad'` added to all type unions and Zod validation schemas
 
 #### ZK Reputation Engine Improvements
 
-The current reputation system works: workers claim `CompletionReceipt` records, build a `ReputationRecord` (score incremented per claim), and generate `ThresholdProof` records proving `score ≥ N` to any verifier. This is already functional and deployed. The next improvements make it genuinely powerful:
+The reputation system is functional and deployed. Weighted scoring is implemented; further improvements are planned:
 
-- **Weighted scoring** — Factor job value into reputation. Currently `score` increments by 1 per completion regardless of contract size. The upgrade adds `salary` from the `CompletionReceipt` into the `ReputationRecord` as a cumulative `total_earned` field. A worker who completed 3 jobs worth 50,000 ALEO total carries more credibility than one who completed 3 micro-tasks. The contract change is localized to `claim_reputation` and `merge_reputation` — adding one `u64` field to `ReputationRecord` and one addition operation
-- **Multi-threshold proofs** — New transition `prove_multi_threshold(rep, min_jobs, min_earned, verifier)` that proves both `completed_jobs ≥ min_jobs` AND `total_earned ≥ min_earned` in a single proof. The verifier receives a `MultiThresholdProof` record containing both thresholds and a `verified: true` flag. This is a single new transition using two `assert` statements — straightforward to implement
+- ✅ **Weighted scoring (DONE)** — `ReputationRecord` now includes `total_earned: u64`. `claim_reputation` and `merge_reputation` accumulate `salary` from each `CompletionReceipt`. A worker completing high-value jobs builds stronger reputation than one completing micro-tasks
+- **Multi-threshold proofs** — Planned but removed from v2 deployment due to variable limit constraints (2,097,152 cap). Will be added in v3 when limit is expanded
 - **In-app verification** — Add a "Verify Proof" page where clients paste a `ThresholdProof` record ciphertext or commitment hash. The UI decodes it (if the client owns the record) and displays the verified threshold. No CLI, no external tools. This is a frontend-only feature using the existing `findRecord` wallet hook
 - **Reputation categories** — Extend `ReputationRecord` with a `category_hash: field` so workers build separate tracks per skill domain (e.g., "security audits" vs. "frontend development"). `claim_reputation` takes an optional category from the linked `JobOffer`'s `category_hash`. Workers can hold multiple `ReputationRecord` records, one per category, and prove threshold per category
 
-#### Contract Hardening
+#### ✅ Contract Hardening (DONE)
 
-- Audit every transition's `assert` conditions for edge cases — especially around double-claim prevention, escrow timeout boundaries, and record consumption ordering
-- Add explicit `assert_neq` guards where records could theoretically be reused across transitions
-- Document all invariants as comments in `main.leo` for future audit readiness
-- Test refund timeout edge cases: what happens at exactly block 1000, block 999, block 1001
+- Hashed escrow timestamps — `escrow_timestamps` mapping changed from `field → u64` to `field → field` using BHP256 hash. Even refund timeout block heights are no longer readable on-chain
+- `refund_escrow_aleo` now requires `created_block: field` and verifies it against the stored hash before allowing refund
+- Removed `register_worker` (cosmetic-only) and `prove_multi_threshold` (exceeded variable limit) to optimize contract size
+- Merged `cancel_escrow_usdcx` + `cancel_escrow_usad` into single `cancel_escrow_stable` transition
+- Final deployment: 2,068,193 / 2,097,152 variables (98.6% of limit)
 
 #### Infrastructure & UX
 
@@ -617,7 +650,7 @@ These features come after the core is hardened. They represent the next layer of
 
 Aleo's architecture does not support in-place contract upgrades. Our mainnet strategy accounts for this:
 
-- **Versioned deployment** — Deploy `zkwork_private_v2.aleo` (with dispute resolution, milestones, weighted reputation) as a new program. Existing testnet records under `v1` are not migrated — mainnet launch is a clean deployment with the production-ready contract
+- **Versioned deployment** — Deploy `zkwork_private_v3.aleo` (with dispute resolution, milestones, multi-threshold proofs) as a new program. Existing testnet records under `v2` are not migrated — mainnet launch is a clean deployment with the production-ready contract
 - **Security audit** — Complete a formal audit of all transitions before mainnet deployment. The contract is 703 lines of Leo with well-defined invariants — auditable scope
 - **Revenue activation** — Platform fee (2–3%) coded directly into `complete_job_*` transitions. Fee is deducted from the escrowed amount before worker payout. The fee address and percentage are hardcoded constants in the contract — transparent and verifiable by anyone reading the source
 - **Free tier** — First N completions per address are fee-free (checked via a `fee_exempt` mapping), reducing friction for new users
@@ -694,12 +727,13 @@ The freelance marketplace is a natural fit for ZK: workers want verified credent
 
 | Component | Status | Details |
 |-----------|--------|---------|
-| Leo Smart Contract | **Deployed** | `zkwork_private_v1.aleo` — 14 transitions, 6 mappings, 8 record types |
+| Leo Smart Contract | **Deployed** | `zkwork_private_v2.aleo` — 15 transitions, 6 mappings, 8 record types, 3 dependencies |
 | ALEO Payment Flow | **Working** | Full escrow lifecycle: deposit → deliverable → complete → payment release |
 | USDCx Payment Flow | **Working** | Commit-at-creation, atomic `transfer_private` at completion |
-| ZK Reputation | **Working** | `claim_reputation`, `merge_reputation`, `prove_threshold` with private `ThresholdProof` records |
-| Frontend | **Live** | 10 pages, Shield Wallet, animated UI, responsive design |
-| Backend API | **Live** | 22 endpoints, JWT auth, Zod validation, LowDB persistence |
+| USAD Payment Flow | **Working** | Commit-at-creation, atomic `transfer_private` at completion (same model as USDCx) |
+| ZK Reputation | **Working** | `claim_reputation`, `merge_reputation`, `prove_threshold` with weighted `total_earned` scoring |
+| Frontend | **Live** | 10 pages, Shield Wallet, 3-currency support, animated UI, responsive design |
+| Backend API | **Live** | 28 endpoints, JWT auth, Zod validation, LowDB persistence, auto-recover escrow |
 | Deployment | **Live** | Frontend on Vercel, Backend on Render |
 
 ---
