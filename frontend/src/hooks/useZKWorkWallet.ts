@@ -47,10 +47,9 @@ export function useZKWorkWallet() {
             if (isNoResponse && attempt === 0) {
               console.warn('[Auth] No response on signMessage, reconnecting...');
               try {
-                if (wallet.disconnect) await wallet.disconnect();
-                await new Promise((r) => setTimeout(r, 1000));
-                await wallet.connect(Network.TESTNET);
                 await new Promise((r) => setTimeout(r, 1500));
+                await wallet.connect(Network.TESTNET);
+                await new Promise((r) => setTimeout(r, 2000));
               } catch { /* ignore */ }
               continue;
             }
@@ -139,10 +138,9 @@ export function useZKWorkWallet() {
           if (isNoResponse && attempt < MAX_RETRIES) {
             console.warn(`[Wallet] No response on attempt ${attempt + 1}, reconnecting wallet...`);
             try {
-              if (wallet.disconnect) await wallet.disconnect();
-              await new Promise((r) => setTimeout(r, 1000));
-              await wallet.connect(Network.TESTNET);
               await new Promise((r) => setTimeout(r, 1500));
+              await wallet.connect(Network.TESTNET);
+              await new Promise((r) => setTimeout(r, 2000));
               console.log('[Wallet] Reconnected, retrying transaction...');
             } catch (reconnectErr) {
               console.warn('[Wallet] Reconnect failed:', reconnectErr);
@@ -162,7 +160,7 @@ export function useZKWorkWallet() {
   const decryptRecords = useCallback(
     async (programId?: string): Promise<unknown[]> => {
       const pid = programId || PROGRAM_ID;
-      for (let attempt = 0; attempt <= 1; attempt++) {
+      for (let attempt = 0; attempt <= 2; attempt++) {
         try {
           const records = await wallet.requestRecords(pid, true);
           if (Array.isArray(records)) return records;
@@ -170,23 +168,22 @@ export function useZKWorkWallet() {
         } catch (err: unknown) {
           const errMsg = err instanceof Error ? err.message : String(err);
           const isNoResponse = /no response|receiving end does not exist|could not establish connection/i.test(errMsg);
-          if (isNoResponse && attempt === 0) {
-            console.warn('[Wallet] No response on requestRecords, reconnecting...');
+          if (isNoResponse && attempt < 2) {
+            console.warn(`[Wallet] No response on requestRecords (attempt ${attempt + 1}), reconnecting...`);
             try {
-              if (wallet.disconnect) await wallet.disconnect();
-              await new Promise((r) => setTimeout(r, 1000));
-              await wallet.connect(Network.TESTNET);
               await new Promise((r) => setTimeout(r, 1500));
+              await wallet.connect(Network.TESTNET);
+              await new Promise((r) => setTimeout(r, 2000));
             } catch { /* ignore reconnect errors */ }
             continue;
           }
-          console.error('[Wallet] Record decryption failed:', err);
-          return [];
+          console.error('[Wallet] Record decryption failed after retries:', err);
+          throw new Error('Wallet not responding. Please refresh the page and reconnect your wallet.');
         }
       }
       return [];
     },
-    [wallet.requestRecords, wallet.connect, wallet.disconnect]
+    [wallet.requestRecords, wallet.connect]
   );
 
   /**
