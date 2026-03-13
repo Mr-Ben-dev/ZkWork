@@ -79,11 +79,15 @@ export const AgreementDetail: FC = () => {
     const expectedDescHash = jobData
       ? stringToField((jobData.title || '').trim() + '|' + (jobData.description || '').trim())
       : null;
+    const expectedPT = agreement.currency === 'aleo' ? '0u8' : agreement.currency === 'usdcx' ? '1u8' : '2u8';
     const detect = async () => {
       try {
         const fnNames = ['submit_deliverable', 'deposit_escrow_aleo', 'commit_escrow_usdcx', 'commit_escrow_usad', 'create_agreement'];
         const filter = (pt: string): boolean => {
           if (!isAgreementRecord(pt)) return false;
+          // Check payment_type matches currency
+          const ptTypeMatch = pt.match(/payment_type:\s*(\du8)/);
+          if (ptTypeMatch && ptTypeMatch[1] !== expectedPT) return false;
           const sal = parseSalaryFromRecord(pt);
           if (sal !== expectedSalary) return false;
           // If we have description_hash, use it for stronger filtering
@@ -134,13 +138,31 @@ export const AgreementDetail: FC = () => {
   /** Content filter: must be an Agreement record (has salary + client) */
   const isAgreementRecord = (pt: string) => pt.includes('salary:') && pt.includes('client:');
 
+  /** Map currency string to on-chain payment_type u8 value */
+  const currencyToPaymentType = (currency?: string): string | null => {
+    if (currency === 'aleo') return '0u8';
+    if (currency === 'usdcx') return '1u8';
+    if (currency === 'usad') return '2u8';
+    return null;
+  };
+
+  /** Check if a record plaintext has the expected payment_type */
+  const matchesPaymentType = (pt: string, expectedType: string | null): boolean => {
+    if (!expectedType) return true;
+    const match = pt.match(/payment_type:\s*(\du8)/);
+    return !match || match[1] === expectedType;
+  };
+
   /**
    * Build a content filter for Agreement records.
    * When onChainAgreementId is set: STRICT match only (no fallback).
    * When not set: match by salary + description_hash for reliable filtering.
+   * Always checks payment_type when currency is known.
    */
-  const buildAgreementFilter = (agreementId?: string, expectedSalaryMicro?: number, expectedDescHash?: string) => (pt: string): boolean => {
+  const buildAgreementFilter = (agreementId?: string, expectedSalaryMicro?: number, expectedDescHash?: string, currency?: string) => (pt: string): boolean => {
     if (!isAgreementRecord(pt)) return false;
+    // Always check payment_type when currency is known
+    if (!matchesPaymentType(pt, currencyToPaymentType(currency))) return false;
     if (agreementId) {
       // Strict: only match exact agreement_id
       const ptId = extractAgreementId(pt);
@@ -166,16 +188,17 @@ export const AgreementDetail: FC = () => {
   const findLatestAgreement = async (): Promise<string | null> => {
     const agId = agreement?.onChainAgreementId;
     const expectedSalary = agreement ? displayToMicro(agreement.amount) : undefined;
+    const currency = agreement?.currency;
     // Compute description_hash from linked job data
     const expectedDescHash = jobData
       ? stringToField((jobData.title || '').trim() + '|' + (jobData.description || '').trim())
       : undefined;
 
     if (!agId) {
-      console.warn('[findLatestAgreement] No onChainAgreementId — using salary+descHash filter');
+      console.warn('[findLatestAgreement] No onChainAgreementId — using salary+descHash+currency filter');
     }
 
-    const filter = buildAgreementFilter(agId, expectedSalary, expectedDescHash);
+    const filter = buildAgreementFilter(agId, expectedSalary, expectedDescHash, currency);
     const sources = ['submit_deliverable', 'deposit_escrow_aleo', 'commit_escrow_usdcx', 'commit_escrow_usad', 'create_agreement'];
     for (const fn of sources) {
       const record = await findRecord({ functionName: fn }, undefined, filter);
@@ -185,11 +208,11 @@ export const AgreementDetail: FC = () => {
       }
     }
 
-    // Fallback: try loose filter (any Agreement record) if strict filter failed
-    // This handles cases where off-chain amount != on-chain salary (e.g. proposedRate vs job.budget)
+    // Fallback: try loose filter (any Agreement record matching payment_type) if strict filter failed
     if (!agId) {
-      console.warn('[findLatestAgreement] Strict filter failed — trying loose match (any Agreement record)');
-      const looseFilter = (pt: string) => isAgreementRecord(pt);
+      console.warn('[findLatestAgreement] Strict filter failed — trying loose match (payment_type-filtered)');
+      const expectedType = currencyToPaymentType(currency);
+      const looseFilter = (pt: string) => isAgreementRecord(pt) && matchesPaymentType(pt, expectedType);
       for (const fn of sources) {
         const record = await findRecord({ functionName: fn }, undefined, looseFilter);
         if (record) {
@@ -289,6 +312,14 @@ export const AgreementDetail: FC = () => {
           return;
         }
 
+        // Validate payment_type before sending to prover
+        const ptMatch = agreementRecord.match(/payment_type:\s*(\du8)/);
+        if (ptMatch && ptMatch[1] !== '1u8') {
+          setError(`Wrong record selected: payment_type is ${ptMatch[1]} but USDCx requires 1u8. This may be from a different agreement.`);
+          setActionLoading('');
+          return;
+        }
+
         txId = await executeTransition(
           'commit_escrow_usdcx',
           [agreementRecord],
@@ -301,6 +332,14 @@ export const AgreementDetail: FC = () => {
         const agreementRecord = await findLatestAgreement();
         if (!agreementRecord) {
           setError('Agreement record not found in wallet.');
+          setActionLoading('');
+          return;
+        }
+
+        // Validate payment_type before sending to prover
+        const ptMatch = agreementRecord.match(/payment_type:\s*(\du8)/);
+        if (ptMatch && ptMatch[1] !== '2u8') {
+          setError(`Wrong record selected: payment_type is ${ptMatch[1]} but USAD requires 2u8. This may be from a different agreement.`);
           setActionLoading('');
           return;
         }
