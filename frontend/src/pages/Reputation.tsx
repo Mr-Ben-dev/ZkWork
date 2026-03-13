@@ -71,9 +71,9 @@ export const Reputation: FC = () => {
         return true;
       };
 
-      // Search both complete_job_aleo and complete_job_usdcx outputs
+      // Search all complete_job outputs (aleo, usdcx, usad)
       let completionRecord: string | null = null;
-      for (const fn of ['complete_job_aleo', 'complete_job_usdcx']) {
+      for (const fn of ['complete_job_aleo', 'complete_job_usdcx', 'complete_job_usad']) {
         completionRecord = await findRecord({ functionName: fn }, undefined, isCompletionReceipt);
         if (completionRecord) break;
       }
