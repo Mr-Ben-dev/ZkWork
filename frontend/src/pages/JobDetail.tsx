@@ -28,25 +28,33 @@ export const JobDetail: FC = () => {
   const loadJob = useCallback(async () => {
     if (!commitment) return;
     try {
-      const [jobRes, appRes] = await Promise.allSettled([
-        apiClient.getJob(commitment),
-        apiClient.getJobApplications(commitment),
-      ]);
-      if (jobRes.status === 'fulfilled') setJob((jobRes.value as any).job || jobRes.value);
-      if (appRes.status === 'fulfilled') setApplications((appRes.value as any).applications || []);
+      const jobRes = await apiClient.getJob(commitment);
+      setJob((jobRes as any).job || jobRes);
+
+      if (isAuthenticated) {
+        try {
+          const appRes = await apiClient.getJobApplications(commitment);
+          setApplications((appRes as any).applications || []);
+        } catch {
+          // Ignore auth errors for applications
+        }
+      }
     } catch {
       //
     } finally {
       setLoading(false);
     }
-  }, [commitment]);
+  }, [commitment, isAuthenticated]);
 
   useEffect(() => {
     loadJob();
   }, [loadJob]);
 
   const handleApply = async () => {
-    if (!connected || !isAuthenticated) {
+    if (!connected) { setError('Please connect your wallet first.'); return; }
+
+    // Always authenticate if not authenticated (handles account switch)
+    if (!isAuthenticated) {
       const ok = await authenticate();
       if (!ok) { setError('Authentication failed. Please try again.'); return; }
     }
@@ -66,6 +74,26 @@ export const JobDetail: FC = () => {
       setProposedRate('');
       await loadJob();
     } catch (err: any) {
+      // Re-authenticate on 401 and retry once
+      if (err.message?.includes('401') || err.message?.toLowerCase().includes('invalid') || err.message?.toLowerCase().includes('expired')) {
+        const ok = await authenticate();
+        if (ok) {
+          try {
+            await apiClient.applyToJob(commitment!, {
+              workerCommitment: randomField(),
+              coverLetter: coverLetter.trim(),
+              proposedRate: parseFloat(proposedRate),
+            });
+            setCoverLetter('');
+            setProposedRate('');
+            await loadJob();
+            return;
+          } catch (retryErr: any) {
+            setError(retryErr.message || 'Application failed');
+            return;
+          }
+        }
+      }
       setError(err.message || 'Application failed');
     } finally {
       setApplying(false);
@@ -73,7 +101,11 @@ export const JobDetail: FC = () => {
   };
 
   const handleCreateAgreement = async (app: any) => {
-    if (!connected || !isAuthenticated) return;
+    if (!connected) { setError('Please connect your wallet first.'); return; }
+    if (!isAuthenticated) {
+      const ok = await authenticate();
+      if (!ok) { setError('Authentication failed. Please try again.'); return; }
+    }
 
     try {
       // Compute expected field values to identify the correct JobOffer record

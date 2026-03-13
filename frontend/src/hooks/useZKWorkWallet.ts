@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useWallet } from '@provablehq/aleo-wallet-adaptor-react';
 import { Network } from '@provablehq/aleo-types';
 import { apiClient } from '../lib/api';
@@ -15,6 +15,16 @@ export function useZKWorkWallet() {
   const { addPendingTx, confirmTx, failTx, updateTxId } = usePendingTxStore();
 
   const walletAddress = wallet.address ?? null;
+
+  // Clear auth when wallet address changes (account switch)
+  const prevAddressRef = useRef<string | null>(walletAddress);
+  useEffect(() => {
+    if (prevAddressRef.current && walletAddress && prevAddressRef.current !== walletAddress) {
+      console.log('[Wallet] Account changed, clearing old auth');
+      clearUser();
+    }
+    prevAddressRef.current = walletAddress;
+  }, [walletAddress, clearUser]);
 
   const authenticate = useCallback(async (): Promise<boolean> => {
     if (!wallet.connected || !walletAddress) return false;
