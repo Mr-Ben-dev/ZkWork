@@ -108,7 +108,8 @@ export const Reputation: FC = () => {
         inputs,
         500_000,
         'claim_reputation',
-        { agreementCommitment }
+        { agreementCommitment },
+        inputs.length === 1 ? [0] : [0, 1] // all inputs are records
       );
 
       if (txId) {
@@ -152,7 +153,8 @@ export const Reputation: FC = () => {
         [repRecord, `${parseInt(threshold)}u64`, verifierAddress],
         500_000,
         'prove_threshold',
-        { threshold: parseInt(threshold), verifier: verifierAddress }
+        { threshold: parseInt(threshold), verifier: verifierAddress },
+        [0] // inputs[0]=ReputationRecord
       );
 
       if (txId) {

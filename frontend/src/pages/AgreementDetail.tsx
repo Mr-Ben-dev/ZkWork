@@ -15,7 +15,7 @@ import { AnimatedBackground } from '../components/ui/AnimatedBackground';
 
 export const AgreementDetail: FC = () => {
   const { commitment } = useParams<{ commitment: string }>();
-  const { connected, executeTransition, findRecord, findAllRecords, findRecordWithRetry, findCreditsRecord, findTokenRecord, findUsadRecord, authenticate } = useZKWorkWallet();
+  const { connected, wallet, executeTransition, findRecord, findAllRecords, findRecordWithRetry, findCreditsRecord, findTokenRecord, findUsadRecord, authenticate } = useZKWorkWallet();
   const { isAuthenticated } = useUserStore();
   const pendingTxs = usePendingTxStore((s) => s.transactions);
 
@@ -326,13 +326,16 @@ export const AgreementDetail: FC = () => {
           [agreementRecord, creditRecords, `${onChainSalary}u64`],
           500_000,
           'deposit_escrow',
-          { agreementCommitment: commitment }
+          { agreementCommitment: commitment },
+          [0, 1] // inputs[0]=Agreement record, inputs[1]=credits record
         );
       } else if (agreement.currency === 'usdcx') {
         // commit_escrow_usdcx(agreement: Agreement)
+        setStatusMessage('Finding agreement record...');
         const agreementRecord = await findLatestAgreement();
+        setStatusMessage('');
         if (!agreementRecord) {
-          setError('Agreement record not found in wallet.');
+          setError('Agreement record not found in wallet. It may have been consumed by a previous failed transaction. Try creating a new agreement.');
           setActionLoading('');
           return;
         }
@@ -345,18 +348,40 @@ export const AgreementDetail: FC = () => {
           return;
         }
 
+        // Validate owner and client match the connected wallet
+        const walletAddr = wallet?.address;
+        if (walletAddr) {
+          const ownerMatch = agreementRecord.match(/owner:\s*(aleo1\w+)/);
+          const clientMatch = agreementRecord.match(/client:\s*(aleo1\w+)/);
+          if (ownerMatch && ownerMatch[1] !== walletAddr) {
+            setError(`Record owner (${ownerMatch[1].slice(0, 15)}...) does not match your wallet.`);
+            setActionLoading('');
+            return;
+          }
+          if (clientMatch && clientMatch[1] !== walletAddr) {
+            setError(`Record client (${clientMatch[1].slice(0, 15)}...) does not match your wallet. Only the job poster can deposit escrow.`);
+            setActionLoading('');
+            return;
+          }
+        }
+
+        console.log('[deposit] USDCx agreement record (full):', agreementRecord);
+
         txId = await executeTransition(
           'commit_escrow_usdcx',
           [agreementRecord],
           500_000,
           'commit_escrow_usdcx',
-          { agreementCommitment: commitment }
+          { agreementCommitment: commitment },
+          [0] // inputs[0]=Agreement record
         );
       } else {
         // commit_escrow_usad(agreement: Agreement)
+        setStatusMessage('Finding agreement record...');
         const agreementRecord = await findLatestAgreement();
+        setStatusMessage('');
         if (!agreementRecord) {
-          setError('Agreement record not found in wallet.');
+          setError('Agreement record not found in wallet. It may have been consumed by a previous failed transaction. Try creating a new agreement.');
           setActionLoading('');
           return;
         }
@@ -369,12 +394,35 @@ export const AgreementDetail: FC = () => {
           return;
         }
 
+        // Validate owner and client match the connected wallet
+        const walletAddr = wallet?.address;
+        if (walletAddr) {
+          const ownerMatch = agreementRecord.match(/owner:\s*(aleo1\w+)/);
+          const clientMatch = agreementRecord.match(/client:\s*(aleo1\w+)/);
+          if (ownerMatch && ownerMatch[1] !== walletAddr) {
+            setError(`Record owner (${ownerMatch[1].slice(0, 15)}...) does not match your wallet. You may need the original job poster's account.`);
+            setActionLoading('');
+            return;
+          }
+          if (clientMatch && clientMatch[1] !== walletAddr) {
+            setError(`Record client (${clientMatch[1].slice(0, 15)}...) does not match your wallet. Only the job poster can deposit escrow.`);
+            setActionLoading('');
+            return;
+          }
+        }
+
+        // Log full record for debugging
+        console.log('[deposit] USAD agreement record (full):', agreementRecord);
+        console.log('[deposit] Record length:', agreementRecord.length);
+        console.log('[deposit] Has _nonce:', agreementRecord.includes('_nonce'));
+
         txId = await executeTransition(
           'commit_escrow_usad',
           [agreementRecord],
           500_000,
           'commit_escrow_usad',
-          { agreementCommitment: commitment }
+          { agreementCommitment: commitment },
+          [0] // inputs[0]=Agreement record
         );
       }
 
@@ -416,7 +464,8 @@ export const AgreementDetail: FC = () => {
         [agreementRecord, delivHash],
         500_000,
         'submit_deliverable',
-        { agreementCommitment: commitment }
+        { agreementCommitment: commitment },
+        [0] // inputs[0]=Agreement record
       );
 
       if (txId) {
@@ -524,7 +573,8 @@ export const AgreementDetail: FC = () => {
           [agreementRecord, escrowRecord, noticeRecord],
           500_000,
           'complete_job',
-          { agreementCommitment: commitment }
+          { agreementCommitment: commitment },
+          [0, 1, 2] // all 3 inputs are records
         );
 
         if (txId) {
@@ -611,7 +661,8 @@ export const AgreementDetail: FC = () => {
           [agreementRecord, escrowRecord, noticeRecord, tokenRecord, `${amountMicro}u128`, proofsInput],
           500_000,
           'complete_job',
-          { agreementCommitment: commitment }
+          { agreementCommitment: commitment },
+          [0, 1, 2, 3] // first 4 inputs are records
         );
 
         if (txId) {
@@ -695,7 +746,8 @@ export const AgreementDetail: FC = () => {
           [agreementRecord, escrowRecord, noticeRecord, tokenRecord, `${amountMicro}u128`, proofsInput],
           500_000,
           'complete_job',
-          { agreementCommitment: commitment }
+          { agreementCommitment: commitment },
+          [0, 1, 2, 3] // first 4 inputs are records
         );
 
         if (txId) {
@@ -743,7 +795,8 @@ export const AgreementDetail: FC = () => {
         [escrowRecord],
         500_000,
         'refund_escrow',
-        { agreementCommitment: commitment }
+        { agreementCommitment: commitment },
+        [0] // inputs[0]=EscrowReceipt record
       );
 
       if (txId) {
