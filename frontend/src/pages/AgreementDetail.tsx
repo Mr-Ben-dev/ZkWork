@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useZKWorkWallet } from '../hooks/useZKWorkWallet';
 import { useUserStore } from '../stores/userStore';
+import { usePendingTxStore } from '../stores/pendingTxStore';
 import { apiClient } from '../lib/api';
 import { displayToMicro } from '../lib/aleo';
 import { stringToField } from '../lib/commitment';
@@ -16,6 +17,7 @@ export const AgreementDetail: FC = () => {
   const { commitment } = useParams<{ commitment: string }>();
   const { connected, executeTransition, findRecord, findAllRecords, findRecordWithRetry, findCreditsRecord, findTokenRecord, findUsadRecord, authenticate } = useZKWorkWallet();
   const { isAuthenticated } = useUserStore();
+  const pendingTxs = usePendingTxStore((s) => s.transactions);
 
   const [agreement, setAgreement] = useState<any>(null);
   const [escrow, setEscrow] = useState<any>(null);
@@ -68,6 +70,19 @@ export const AgreementDetail: FC = () => {
     const interval = setInterval(loadData, 15000);
     return () => clearInterval(interval);
   }, [loadData]);
+
+  // Auto-reset escrow status when a deposit tx is rejected on-chain
+  useEffect(() => {
+    if (!commitment || !escrow) return;
+    if (escrow.status !== 'committed' && escrow.status !== 'deposited') return;
+    const depositTxId = escrow.depositTxId;
+    if (!depositTxId) return;
+    const tx = pendingTxs.find((t) => t.id === depositTxId || t.meta?.agreementCommitment === commitment);
+    if (tx && tx.status === 'failed') {
+      console.log('[escrow] Deposit tx rejected, resetting escrow status');
+      apiClient.confirmEscrowStatus(commitment, 'rejected').then(() => loadData()).catch(() => {});
+    }
+  }, [pendingTxs, commitment, escrow, loadData]);
 
   // Auto-detect on-chain agreement_id when missing.
   // Uses salary + description_hash from linked job to filter accurately.
@@ -259,6 +274,16 @@ export const AgreementDetail: FC = () => {
     setActionLoading('deposit');
 
     try {
+      // If escrow is 'committed' but the tx was rejected, reset it first
+      if (escrow && (escrow.status === 'committed' || escrow.status === 'deposited')) {
+        const depositTx = pendingTxs.find((t) => t.id === escrow.depositTxId || t.meta?.agreementCommitment === commitment);
+        if (depositTx && depositTx.status === 'failed') {
+          console.log('[deposit] Previous deposit tx was rejected, resetting escrow status');
+          await apiClient.confirmEscrowStatus(commitment!, 'rejected');
+          await loadData();
+        }
+      }
+
       let txId: string | null = null;
 
       if (agreement.currency === 'aleo') {
