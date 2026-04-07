@@ -50,7 +50,7 @@
       ],
       "deadline": "2026-03-13",
       "posterHash": "0136378a248a05392a02b768beb5665a314daae8889991dcf61733201e3d299e",
-      "status": "assigned",
+      "status": "completed",
       "applicantCount": 1,
       "txId": "shield_1773351159462_u58clln20m",
       "createdAt": "2026-03-12T21:32:39.473Z"
@@ -89,9 +89,11 @@
       "clientHash": "0136378a248a05392a02b768beb5665a314daae8889991dcf61733201e3d299e",
       "amount": 0.2,
       "currency": "usad",
-      "status": "active",
+      "status": "completed",
       "txId": "shield_1773351273673_awwr2em16xk",
-      "createdAt": "2026-03-12T21:34:37.310Z"
+      "createdAt": "2026-03-12T21:34:37.310Z",
+      "onChainAgreementId": "1351377258299328713361021501450597480701281570491363151077695481301560320878field",
+      "deliverable": "wfasdwq"
     },
     "432449596449956533447564284330310064582292762736398777357054115110018905147field": {
       "commitment": "432449596449956533447564284330310064582292762736398777357054115110018905147field",
@@ -108,7 +110,17 @@
       "deliverable": "jojgfy"
     }
   },
-  "escrows": {},
+  "escrows": {
+    "331003193610639365168902849957294042525148346801412798267625730884779396879field": {
+      "agreementCommitment": "331003193610639365168902849957294042525148346801412798267625730884779396879field",
+      "amount": 0.2,
+      "currency": "usad",
+      "status": "released",
+      "depositTxId": "shield_1773352702802_w98bm8svsm",
+      "depositHeight": 0,
+      "releaseTxId": "shield_1773352762611_29hx9fse0xc"
+    }
+  },
   "deliverables": {
     "432449596449956533447564284330310064582292762736398777357054115110018905147field": {
       "agreementCommitment": "432449596449956533447564284330310064582292762736398777357054115110018905147field",
@@ -116,6 +128,13 @@
       "status": "submitted",
       "txId": "shield_1773352236025_8twa8k2oomk",
       "createdAt": "2026-03-12T21:50:36.090Z"
+    },
+    "331003193610639365168902849957294042525148346801412798267625730884779396879field": {
+      "agreementCommitment": "331003193610639365168902849957294042525148346801412798267625730884779396879field",
+      "deliverableHash": "wfasdwq",
+      "status": "accepted",
+      "txId": "shield_1773352735882_jjb4xuj9wq",
+      "createdAt": "2026-03-12T21:58:55.898Z"
     }
   },
   "reputation": {},
@@ -178,6 +197,33 @@
         "agreementCommitment": "432449596449956533447564284330310064582292762736398777357054115110018905147field"
       },
       "timestamp": "2026-03-12T21:50:36.091Z"
+    },
+    {
+      "type": "escrow_deposited",
+      "actorHash": "0136378a248a05392a02b768beb5665a314daae8889991dcf61733201e3d299e",
+      "data": {
+        "agreementCommitment": "331003193610639365168902849957294042525148346801412798267625730884779396879field",
+        "amount": 0.2,
+        "currency": "usad"
+      },
+      "timestamp": "2026-03-12T21:58:22.815Z"
+    },
+    {
+      "type": "deliverable_submitted",
+      "actorHash": "7c84bc18a2f6eb5377e5c41b601463ddcad6733cc278c1107dabfd962d27b90e",
+      "data": {
+        "agreementCommitment": "331003193610639365168902849957294042525148346801412798267625730884779396879field"
+      },
+      "timestamp": "2026-03-12T21:58:55.900Z"
+    },
+    {
+      "type": "job_completed",
+      "actorHash": "0136378a248a05392a02b768beb5665a314daae8889991dcf61733201e3d299e",
+      "data": {
+        "agreementCommitment": "331003193610639365168902849957294042525148346801412798267625730884779396879field",
+        "txId": "shield_1773352762611_29hx9fse0xc"
+      },
+      "timestamp": "2026-03-12T21:59:22.622Z"
     }
   ]
 }

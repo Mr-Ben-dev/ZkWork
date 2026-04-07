@@ -143,7 +143,8 @@ export const JobDetail: FC = () => {
         [jobRecord, workerAddress, salt],
         500_000,
         'create_agreement',
-        { jobCommitment: commitment, workerCommitment: app.workerCommitment }
+        { jobCommitment: commitment, workerCommitment: app.workerCommitment },
+        [0] // inputs[0]=JobOffer record
       );
 
       const agreementCommitment = salt;

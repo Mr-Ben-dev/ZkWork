@@ -97,7 +97,8 @@ export function useZKWorkWallet() {
       inputs: string[],
       fee: number,
       txType: string,
-      meta?: Record<string, unknown>
+      meta?: Record<string, unknown>,
+      recordIndices?: number[]
     ): Promise<string | null> => {
       if (!wallet.executeTransaction) {
         console.error('[Wallet] executeTransaction not available');
@@ -107,13 +108,20 @@ export function useZKWorkWallet() {
       const MAX_RETRIES = 2;
       for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
         try {
-          const txResult = await wallet.executeTransaction({
+          const payload: Record<string, unknown> = {
             program: PROGRAM_ID,
             function: transitionName,
             inputs,
             fee,
             privateFee: false,
-          });
+          };
+
+          // Tell Shield wallet which inputs are records (vs plain values)
+          if (recordIndices && recordIndices.length > 0) {
+            payload.recordIndices = recordIndices;
+          }
+
+          const txResult = await wallet.executeTransaction(payload as any);
 
           const tempTxId = txResult?.transactionId ?? null;
 
@@ -149,7 +157,16 @@ export function useZKWorkWallet() {
           }
 
           console.error(`[Wallet] Transition ${transitionName} failed:`, err);
-          return null;
+          // Throw meaningful error instead of silently returning null
+          const isProvingFailed = /prov(e|ing)|constraint|invalid proof/i.test(errMsg);
+          const isUserRejected = /user reject|denied|cancel/i.test(errMsg);
+          if (isUserRejected) {
+            throw new Error('Transaction cancelled by user.');
+          }
+          if (isProvingFailed) {
+            throw new Error(`Proving failed for ${transitionName}. The agreement record may have been consumed by a previous failed transaction. Try creating a new agreement.`);
+          }
+          throw new Error(errMsg || `Transaction ${transitionName} failed`);
         }
       }
       return null;
