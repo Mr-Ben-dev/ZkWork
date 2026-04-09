@@ -10,8 +10,6 @@ import { stringToField } from '../lib/commitment';
 import { buildMerkleProofPair, toMicroUSDCx } from '../lib/usdcx';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { EscrowLock, JobContract } from '../components/icons';
-import { AnimatedBackground } from '../components/ui/AnimatedBackground';
 
 export const AgreementDetail: FC = () => {
   const { commitment } = useParams<{ commitment: string }>();
@@ -29,6 +27,9 @@ export const AgreementDetail: FC = () => {
   const [role, setRole] = useState<'client' | 'worker' | 'unknown'>('unknown');
   const [jobData, setJobData] = useState<any>(null);
   const [autoDetectDone, setAutoDetectDone] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('');
+  const [showDisputeForm, setShowDisputeForm] = useState(false);
+  const [submittingDispute, setSubmittingDispute] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!commitment) return;
@@ -813,6 +814,22 @@ export const AgreementDetail: FC = () => {
     }
   };
 
+  const handleRaiseDispute = async () => {
+    if (!disputeReason.trim()) { setError('Please describe the dispute reason.'); return; }
+    setError('');
+    setSubmittingDispute(true);
+    try {
+      await apiClient.raiseDispute(commitment!, { reason: disputeReason.trim() });
+      setShowDisputeForm(false);
+      setDisputeReason('');
+      await loadData();
+    } catch (err: any) {
+      setError(err.message || 'Failed to raise dispute');
+    } finally {
+      setSubmittingDispute(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-20">
@@ -823,63 +840,61 @@ export const AgreementDetail: FC = () => {
 
   if (!agreement) {
     return (
-      <div className="relative min-h-screen">
-        <AnimatedBackground />
-        <div className="relative z-10 max-w-3xl mx-auto px-4 py-20 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-6">
-            <JobContract className="w-8 h-8 text-accent" />
-          </div>
-          <p className="text-white/40">Agreement not found</p>
+      <div className="relative min-h-screen flex items-center justify-center" style={{ background: '#0d0812' }}>
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 text-3xl" style={{ background: 'rgba(135,255,139,0.06)', border: '1px solid rgba(135,255,139,0.1)' }}>📋</div>
+          <p style={{ color: 'rgba(212,190,236,0.45)' }}>Agreement not found</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen">
-      <AnimatedBackground />
+    <div className="relative min-h-screen" style={{ background: '#0d0812' }}>
+      <div className="orb orb-green w-[500px] h-[500px] -top-40 -right-48" style={{ opacity: 0.06 }} />
+      <div className="orb orb-purple w-[400px] h-[400px] top-1/2 -left-32" style={{ opacity: 0.07 }} />
       <div className="relative z-10 max-w-3xl mx-auto px-4 py-10">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="glass-glow p-6 sm:p-8 mb-6">
+        <div className="liquid-glass p-6 sm:p-8 mb-6">
           <div className="flex items-start justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold mb-1">Agreement</h1>
-              <p className="text-xs font-mono text-white/30">{commitment}</p>
+              <p className="text-xs font-mono" style={{ color: 'rgba(212,190,236,0.3)' }}>{commitment}</p>
             </div>
             <StatusBadge status={agreement.status} />
           </div>
 
           <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-              <span className="text-white/40">Amount</span>
+            <div className="p-3 rounded-xl" style={{ background: 'rgba(26,19,37,0.6)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <span style={{ color: 'rgba(212,190,236,0.45)' }}>Amount</span>
               <p className="text-accent font-semibold text-lg">
                 {agreement.amount} {agreement.currency?.toUpperCase()}
               </p>
             </div>
-            <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-              <span className="text-white/40">Created</span>
-              <p className="text-white/70">{new Date(agreement.createdAt).toLocaleDateString()}</p>
+            <div className="p-3 rounded-xl" style={{ background: 'rgba(26,19,37,0.6)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <span style={{ color: 'rgba(212,190,236,0.45)' }}>Created</span>
+              <p style={{ color: 'rgba(212,190,236,0.7)' }}>{new Date(agreement.createdAt).toLocaleDateString()}</p>
             </div>
           </div>
 
           {agreement.deliverable && (
-            <div className="mt-4 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-              <span className="text-xs text-white/40">Deliverable</span>
-              <p className="text-sm text-white/70 mt-1">{agreement.deliverable}</p>
+            <div className="mt-4 p-3 rounded-xl" style={{ background: 'rgba(26,19,37,0.6)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(212,190,236,0.45)' }}>Deliverable</span>
+              <p className="text-sm mt-1" style={{ color: 'rgba(212,190,236,0.7)' }}>{agreement.deliverable}</p>
             </div>
           )}
         </div>
 
         {escrow && (
-          <div className="glass-glow p-6 sm:p-8 mb-6">
+          <div className="glass-card p-6 sm:p-8 mb-6">
             <div className="flex items-center gap-2 mb-3">
-              <EscrowLock className="w-5 h-5 text-accent" />
+              <span className="text-xl">🔒</span>
               <h2 className="text-lg font-semibold">Escrow Status</h2>
             </div>
             <div className="flex items-center gap-3">
               <StatusBadge status={escrow.status || 'none'} />
               {escrow.onChain && (
-                <span className="text-xs text-green-400 flex items-center gap-1">
+                <span className="text-xs flex items-center gap-1" style={{ color: '#87FF8B' }}>
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                   Verified on-chain
                 </span>
@@ -888,23 +903,34 @@ export const AgreementDetail: FC = () => {
           </div>
         )}
 
-        <div className="glass-glow p-6 sm:p-8 space-y-4">
+        {/* Dispute resolved banner */}
+        {agreement.status === 'disputed' && (
+          <div className="glass-card p-4 mb-6 flex items-center gap-3" style={{ border: '1px solid rgba(251,191,36,0.2)', background: 'rgba(251,191,36,0.05)' }}>
+            <span className="text-2xl">⚖️</span>
+            <div>
+              <p className="font-semibold text-yellow-400 text-sm">Dispute Raised</p>
+              <p className="text-xs mt-0.5" style={{ color: 'rgba(212,190,236,0.5)' }}>This agreement is under arbitration review. Both parties will be notified of the outcome.</p>
+            </div>
+          </div>
+        )}
+
+        <div className="glass-card p-6 sm:p-8 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold">Actions</h2>
-            <span className="text-xs px-2 py-1 rounded-full bg-white/10 text-white/50">
+            <span className="text-xs px-3 py-1 rounded-full font-medium uppercase tracking-wider" style={{ background: 'rgba(135,255,139,0.08)', border: '1px solid rgba(135,255,139,0.15)', color: '#87FF8B' }}>
               {role === 'client' ? 'Client' : role === 'worker' ? 'Worker' : 'Viewer'}
             </span>
           </div>
 
           {/* Syncing on-chain agreement ID */}
           {connected && !agreement.onChainAgreementId && !autoDetectDone && (
-            <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-sm text-blue-400 flex items-center gap-2">
+            <div className="p-3 rounded-xl text-sm flex items-center gap-2" style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: 'rgb(165,180,252)' }}>
               <LoadingSpinner size={14} /> Syncing on-chain agreement ID...
             </div>
           )}
 
           {connected && autoDetectDone && !agreement.onChainAgreementId && (
-            <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-sm text-white/50">
+            <div className="p-3 rounded-xl text-sm" style={{ background: 'rgba(26,19,37,0.6)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(212,190,236,0.5)' }}>
               <p className="mb-2">Agreement ID is still syncing. If the transaction was recent, it may take a moment.</p>
               <button
                 onClick={async () => {
@@ -957,13 +983,13 @@ export const AgreementDetail: FC = () => {
           )}
 
           {statusMessage && (
-            <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-sm text-blue-400 flex items-center gap-2">
+            <div className="p-3 rounded-xl text-sm flex items-center gap-2" style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: 'rgb(165,180,252)' }}>
               <LoadingSpinner size={14} /> {statusMessage}
             </div>
           )}
 
           {error && (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+            <div className="p-3 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: 'rgb(252,165,165)' }}>
               {error}
             </div>
           )}
@@ -986,7 +1012,7 @@ export const AgreementDetail: FC = () => {
           {/* Worker: Submit Deliverable */}
           {role === 'worker' && agreement.status === 'active' && (
             <div>
-              <label className="block text-sm text-white/60 mb-2">Submit Deliverable</label>
+              <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>Submit Deliverable</label>
               <textarea
                 value={deliverable}
                 onChange={(e) => setDeliverable(e.target.value)}
@@ -1023,12 +1049,13 @@ export const AgreementDetail: FC = () => {
             </button>
           )}
 
-          {/* Client: Refund */}
+          {/* Client: Refund after timeout */}
           {role === 'client' && agreement.status === 'active' && (escrow?.status === 'deposited' || escrow?.status === 'committed') && (
             <button
               onClick={handleRefund}
               disabled={actionLoading === 'refund'}
-              className="btn-secondary w-full flex items-center justify-center gap-2 text-orange-400 border-orange-500/30 hover:bg-orange-500/10"
+              className="btn-secondary w-full flex items-center justify-center gap-2"
+              style={{ color: 'rgb(251,146,60)', borderColor: 'rgba(249,115,22,0.3)' }}
             >
               {actionLoading === 'refund' ? (
                 <><LoadingSpinner size={16} /> Refunding...</>
@@ -1036,6 +1063,55 @@ export const AgreementDetail: FC = () => {
                 'Request Refund (after timeout)'
               )}
             </button>
+          )}
+
+          {/* Dispute Resolution */}
+          {agreement.status !== 'disputed' && agreement.status !== 'completed' && agreement.status !== 'cancelled' &&
+            (escrow?.status === 'deposited' || escrow?.status === 'committed') && (
+            <div className="pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+              {!showDisputeForm ? (
+                <button
+                  onClick={() => setShowDisputeForm(true)}
+                  className="text-sm flex items-center gap-2 transition-colors duration-200"
+                  style={{ color: 'rgba(212,190,236,0.5)' }}
+                >
+                  <span>⚖️</span> Raise a Dispute
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">⚖️</span>
+                    <h3 className="font-semibold text-sm">Raise Dispute</h3>
+                  </div>
+                  <p className="text-xs" style={{ color: 'rgba(212,190,236,0.45)' }}>
+                    Describe the issue clearly. An arbitrator will review and mediate between both parties.
+                  </p>
+                  <textarea
+                    value={disputeReason}
+                    onChange={(e) => setDisputeReason(e.target.value)}
+                    placeholder="Describe the dispute in detail — what went wrong, what resolution you expect..."
+                    rows={4}
+                    className="input-field resize-none"
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleRaiseDispute}
+                      disabled={submittingDispute}
+                      className="btn-primary flex items-center gap-2 text-sm"
+                      style={{ background: 'rgba(251,191,36,0.15)', borderColor: 'rgba(251,191,36,0.3)', color: 'rgb(251,191,36)', boxShadow: 'none' }}
+                    >
+                      {submittingDispute ? <><LoadingSpinner size={14} /> Submitting...</> : 'Submit Dispute'}
+                    </button>
+                    <button
+                      onClick={() => { setShowDisputeForm(false); setDisputeReason(''); }}
+                      className="btn-secondary text-sm px-4"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </motion.div>

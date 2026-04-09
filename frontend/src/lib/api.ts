@@ -73,6 +73,9 @@ export const apiClient = {
   patchAgreement: (commitment: string, data: { onChainAgreementId: string }) =>
     request(`/agreements/${commitment}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
+  raiseDispute: (commitment: string, data: { reason: string }) =>
+    request(`/agreements/${commitment}/dispute`, { method: 'POST', body: JSON.stringify(data) }),
+
   depositEscrow: (data: { agreementCommitment: string; amount: number; currency: string; txId: string }) =>
     request('/escrow/deposit', { method: 'POST', body: JSON.stringify(data) }),
 

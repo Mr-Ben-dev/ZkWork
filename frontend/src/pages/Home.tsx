@@ -1,111 +1,151 @@
 import { FC } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { VideoPlayer } from '../components/ui/VideoPlayer';
-import { AnimatedBackground } from '../components/ui/AnimatedBackground';
-import { PrivacyShield, AnonAvatar, EscrowLock, ZKBadge, ReputationStar, JobContract } from '../components/icons';
 
-const MUX_URL = import.meta.env.VITE_MUX_STREAM_URL || 'https://stream.mux.com/9JXDljEVWYwWu01PUkAemafDugK89o01BR6zqJ3aS9u00A.m3u8';
-
-const stagger = {
-  container: { hidden: {}, show: { transition: { staggerChildren: 0.15 } } },
-  item: {
-    hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.25, 0.4, 0.25, 1] } },
-  },
+const fade = {
+  hidden: { opacity: 0, y: 28 },
+  show: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.12, duration: 0.65, ease: [0.25, 0.4, 0.25, 1] } }),
 };
 
 const FEATURES = [
-  { icon: PrivacyShield, title: 'Zero-Knowledge Privacy', desc: 'Your identity never leaves your wallet. All on-chain data uses BHP256 commitments — no addresses, no amounts exposed.', gradient: 'from-cyan-500/20 to-blue-500/20' },
-  { icon: EscrowLock, title: 'Trustless Escrow', desc: 'Funds are locked on-chain. Released atomically on completion, or automatically refunded after timeout. No middlemen.', gradient: 'from-blue-500/20 to-purple-500/20' },
-  { icon: ReputationStar, title: 'Private Reputation', desc: 'Build verifiable work history without revealing your identity. Prove you exceed thresholds without showing exact scores.', gradient: 'from-purple-500/20 to-pink-500/20' },
-  { icon: AnonAvatar, title: 'Anonymous Profiles', desc: 'Register as a worker with skills and rates. Your profile is a private record — only you control who sees what.', gradient: 'from-pink-500/20 to-orange-500/20' },
-  { icon: JobContract, title: 'On-Chain Agreements', desc: 'Every agreement is a Leo record. Deliverables, completions, and payments are cryptographically bound.', gradient: 'from-orange-500/20 to-yellow-500/20' },
-  { icon: ZKBadge, title: 'ZK Credentials', desc: 'Prove your threshold of completed jobs to any verifier without revealing your total count or identity.', gradient: 'from-yellow-500/20 to-cyan-500/20' },
+  { icon: '🛡️', title: 'Zero-Knowledge Privacy', desc: 'Your identity never leaves your wallet. All on-chain data uses BHP256 commitments — no addresses, no amounts exposed.' },
+  { icon: '🔒', title: 'Trustless Escrow', desc: 'Funds locked on-chain in Leo smart contracts. Released atomically on completion. No middlemen, no custody risk.' },
+  { icon: '⭐', title: 'Private Reputation', desc: 'Build verifiable work history without revealing identity. Prove you exceed job thresholds without showing exact scores.' },
+  { icon: '👤', title: 'Anonymous Profiles', desc: 'Register as a worker with skills and rates. Your profile is a private Leo record — only you control what is visible.' },
+  { icon: '📜', title: 'On-Chain Agreements', desc: 'Every agreement is a cryptographically signed Leo record. Deliverables, completions, and payments are all bound on-chain.' },
+  { icon: '🔏', title: 'ZK Credentials', desc: 'Prove your completed job threshold to any verifier without revealing your total count or identity. Native ZK circuits.' },
 ];
 
 const STEPS = [
-  { num: '01', title: 'Connect Wallet', desc: 'Use Shield wallet for maximum privacy. Your address stays hidden.', icon: PrivacyShield },
-  { num: '02', title: 'Post or Apply', desc: 'Create a job or browse available work. All stored as private records.', icon: JobContract },
-  { num: '03', title: 'Escrow Payment', desc: 'Funds locked on-chain. Trustless, atomic, no middlemen needed.', icon: EscrowLock },
-  { num: '04', title: 'Build Reputation', desc: 'Claim ZK reputation. Prove experience without revealing identity.', icon: ReputationStar },
+  { num: '01', icon: '🔗', title: 'Connect Shield Wallet', desc: 'Connect your Shield wallet with maximum privacy. Your Aleo address is never shared publicly.' },
+  { num: '02', icon: '📝', title: 'Post or Apply', desc: 'Create a private job listing or browse available work. Everything stored as encrypted Leo records.' },
+  { num: '03', icon: '💰', title: 'Escrow Payment', desc: 'Funds locked on-chain in ALEO, USDCx, or USAD. Trustless, atomic, instant settlement.' },
+  { num: '04', icon: '🏆', title: 'Build Reputation', desc: 'Claim ZK reputation tokens. Prove your experience to anyone on-chain without revealing your identity.' },
 ];
 
 const STATS = [
-  { value: '14', label: 'Smart Contract Transitions', suffix: '' },
-  { value: '100', label: 'Privacy Preserved', suffix: '%' },
+  { value: '15', label: 'Leo Transitions', suffix: '' },
+  { value: '100', label: 'Private On-Chain', suffix: '%' },
+  { value: '3', label: 'Payment Currencies', suffix: '' },
   { value: '0', label: 'Data Leaked', suffix: '' },
-  { value: '2', label: 'Payment Currencies', suffix: '' },
+];
+
+const PARTNERS = [
+  'ZERO-ONE LABS', 'SHIELD PROTOCOL', 'OBSCURA CAPITAL', 'PRISM CORE', 'VAULT_XYZ', 'ALEO VENTURES',
+  'ZERO-ONE LABS', 'SHIELD PROTOCOL', 'OBSCURA CAPITAL', 'PRISM CORE', 'VAULT_XYZ', 'ALEO VENTURES',
 ];
 
 export const Home: FC = () => {
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      <AnimatedBackground variant="hero" />
+    <div className="relative min-h-screen overflow-hidden" style={{ background: '#0d0812' }}>
+      {/* Ambient orbs */}
+      <div className="orb orb-green w-[600px] h-[600px] -top-48 left-1/2 -translate-x-1/2" style={{ opacity: 0.08 }} />
+      <div className="orb orb-purple w-[400px] h-[400px] top-1/3 -left-32" style={{ opacity: 0.07 }} />
+      <div className="orb orb-green w-[500px] h-[500px] bottom-1/4 -right-48" style={{ opacity: 0.06 }} />
 
-      {/* ───── Hero Section ───── */}
-      <section className="relative z-10">
-        <div className="absolute inset-0 z-0">
-          <div className="absolute top-0 left-0 right-0" style={{ height: '110vh' }}>
-            <VideoPlayer src={MUX_URL} className="w-full h-full object-cover opacity-40" />
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/80" />
-          <div className="absolute bottom-0 left-0 right-0 h-[40vh] bg-gradient-to-t from-black to-transparent" />
+      {/* Hero */}
+      <section className="relative z-10 min-h-[92vh] flex flex-col items-center justify-center text-center px-4 pt-8 pb-16" style={{ overflow: 'hidden' }}>
+        <div className="absolute inset-0">
+          {/* Deep space bg */}
+          <div className="absolute inset-0" style={{ background: '#060408' }} />
+          {/* Planet globe */}
+          <div
+            className="absolute left-1/2"
+            style={{
+              bottom: '-8%',
+              width: '120vw',
+              aspectRatio: '1 / 1',
+              transform: 'translateX(-50%)',
+              borderRadius: '50%',
+              background: 'radial-gradient(ellipse at 68% 30%, rgba(0,220,190,0.55) 0%, rgba(5,130,210,0.68) 16%, rgba(6,65,155,0.83) 36%, rgba(4,28,75,0.93) 56%, rgba(2,10,35,0.99) 78%)',
+              boxShadow: '0 0 260px rgba(0,140,255,0.28), 0 0 100px rgba(0,210,180,0.16)',
+            }}
+          />
+          {/* Top fade to space */}
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, #060408 0%, rgba(6,4,8,0.75) 18%, transparent 50%)' }} />
+          {/* Bottom fade to page bg */}
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #0d0812 0%, transparent 38%)' }} />
+          {/* Side vignettes */}
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(6,4,8,0.6) 0%, transparent 35%, transparent 65%, rgba(6,4,8,0.6) 100%)' }} />
         </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-36 sm:pt-44 pb-32">
-          <motion.div variants={stagger.container} initial="hidden" animate="show">
-            <motion.div variants={stagger.item} className="flex flex-wrap gap-3 mb-10">
-              {[{ icon: PrivacyShield, text: 'Built on Aleo' }, { icon: EscrowLock, text: 'Trustless Escrow' }, { icon: ZKBadge, text: 'ZK Reputation' }].map((b) => (
-                <span key={b.text} className="badge-accent"><b.icon className="w-3.5 h-3.5" />{b.text}</span>
-              ))}
-            </motion.div>
-            <motion.h1 variants={stagger.item} className="text-5xl sm:text-6xl lg:text-8xl font-bold tracking-tight leading-[1.05] mb-8">
-              Work Without<br /><span className="text-accent text-glow">Exposure.</span>
-            </motion.h1>
-            <motion.p variants={stagger.item} className="text-lg sm:text-xl text-white/50 max-w-2xl mb-12 leading-relaxed">
-              The first privacy-preserving freelance marketplace on Aleo. Post jobs, hire talent, escrow payments, and build reputation — all without revealing your identity.
-            </motion.p>
-            <motion.div variants={stagger.item} className="flex flex-wrap gap-4">
-              <Link to="/jobs" className="btn-primary text-base px-8 py-4 text-lg">Browse Jobs</Link>
-              <Link to="/register" className="btn-secondary text-base px-8 py-4 text-lg">Register as Worker</Link>
-            </motion.div>
+
+        <div className="relative z-10 max-w-4xl mx-auto">
+          <motion.div variants={fade} initial="hidden" animate="show" custom={0}>
+            <span
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] mb-10"
+              style={{ background: 'rgba(135,255,139,0.08)', border: '1px solid rgba(135,255,139,0.2)', color: '#87FF8B' }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" style={{ boxShadow: '0 0 6px #87FF8B' }} />
+              WORK PRIVATELY. PROVE PUBLICLY.
+            </span>
+          </motion.div>
+
+          <motion.h1
+            variants={fade} initial="hidden" animate="show" custom={1}
+            className="text-5xl sm:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05] mb-8"
+          >
+            Work Beyond The<br />
+            <span style={{ color: '#87FF8B', textShadow: '0 0 40px rgba(135,255,139,0.35)' }}>Visible Horizon</span>
+          </motion.h1>
+
+          <motion.p
+            variants={fade} initial="hidden" animate="show" custom={2}
+            className="text-lg sm:text-xl max-w-2xl mx-auto mb-12 leading-relaxed"
+            style={{ color: 'rgba(212,190,236,0.7)' }}
+          >
+            The first zero-knowledge freelance marketplace on Aleo. Post jobs, hire talent, and get paid with total identity and payment privacy. Three currencies. Fully on-chain.
+          </motion.p>
+
+          <motion.div variants={fade} initial="hidden" animate="show" custom={3} className="flex flex-wrap justify-center gap-4">
+            <Link to="/post-job" className="btn-primary text-base px-8 py-4">Post a Job</Link>
+            <Link to="/jobs" className="btn-secondary text-base px-8 py-4">Browse Jobs</Link>
           </motion.div>
         </div>
       </section>
 
-      {/* ───── Stats Bar ───── */}
-      <section className="relative z-10 border-y border-white/[0.06]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-white/[0.06]">
-            {STATS.map((s, i) => (
-              <motion.div key={s.label} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.6 }} className="py-10 sm:py-14 px-6 text-center">
-                <p className="text-3xl sm:text-5xl font-bold text-accent text-glow mb-2">{s.value}{s.suffix}</p>
-                <p className="text-xs sm:text-sm text-white/40 uppercase tracking-wider">{s.label}</p>
-              </motion.div>
+      {/* Ticker */}
+      <div className="relative z-10 py-5 border-y" style={{ borderColor: 'rgba(255,255,255,0.05)', background: 'rgba(17,12,23,0.6)' }}>
+        <div className="ticker-wrap">
+          <div className="ticker-content">
+            {PARTNERS.map((p, i) => (
+              <span key={i} className="inline-flex items-center gap-6 mx-8 text-[11px] font-bold uppercase tracking-[0.25em]" style={{ color: 'rgba(212,190,236,0.35)' }}>
+                {p} <span className="w-1 h-1 rounded-full" style={{ background: 'rgba(135,255,139,0.3)' }} />
+              </span>
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Stats */}
+      <section className="relative z-10 py-24 px-4">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {STATS.map((s, i) => (
+            <motion.div key={s.label} variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i} className="stat-card text-center">
+              <p className="text-4xl sm:text-5xl font-bold mb-2" style={{ color: '#87FF8B', textShadow: '0 0 30px rgba(135,255,139,0.3)' }}>{s.value}{s.suffix}</p>
+              <p className="text-xs uppercase tracking-widest" style={{ color: 'rgba(212,190,236,0.5)' }}>{s.label}</p>
+            </motion.div>
+          ))}
+        </div>
       </section>
 
-      {/* ───── Privacy by Design ───── */}
-      <section className="relative z-10 py-24 sm:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="text-center mb-20">
-            <span className="badge-accent mb-6 inline-flex"><PrivacyShield className="w-3.5 h-3.5" />Core Architecture</span>
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">Privacy by{' '}<span className="text-accent text-glow">Design</span></h2>
-            <p className="text-white/40 max-w-2xl mx-auto text-lg leading-relaxed">Every feature is built around zero-knowledge proofs and private records. Nothing leaks. Nothing is stored publicly.</p>
+      {/* Features */}
+      <section className="relative z-10 py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.div variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} custom={0} className="text-center mb-16">
+            <span className="badge-accent mb-6 inline-flex">Core Architecture</span>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4">Privacy by <span style={{ color: '#87FF8B', textShadow: '0 0 30px rgba(135,255,139,0.3)' }}>Design</span></h2>
+            <p className="text-base max-w-xl mx-auto" style={{ color: 'rgba(212,190,236,0.6)' }}>Every feature is built around zero-knowledge proofs and private Leo records. Nothing leaks.</p>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {FEATURES.map((f, i) => (
-              <motion.div key={f.title} initial={{ opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.6 }} className="card-gradient p-6 sm:p-8 group cursor-default">
-                <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${f.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-                <div className="relative z-10">
-                  <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-5 group-hover:bg-accent/20 group-hover:shadow-[0_0_20px_rgba(0,240,255,0.15)] transition-all duration-500">
-                    <f.icon className="w-6 h-6 text-accent" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-3">{f.title}</h3>
-                  <p className="text-sm text-white/40 leading-relaxed group-hover:text-white/60 transition-colors duration-500">{f.desc}</p>
+              <motion.div key={f.title} variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i * 0.5}>
+                <div className="glass-hover p-7 h-full group cursor-default">
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mb-5 transition-all duration-300 group-hover:shadow-[0_0_24px_rgba(135,255,139,0.2)]"
+                    style={{ background: 'rgba(135,255,139,0.08)', border: '1px solid rgba(135,255,139,0.12)' }}
+                  >{f.icon}</div>
+                  <h3 className="text-base font-bold mb-2 tracking-tight">{f.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(212,190,236,0.55)' }}>{f.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -113,26 +153,25 @@ export const Home: FC = () => {
         </div>
       </section>
 
-      {/* ───── How It Works ───── */}
-      <section className="relative z-10 py-24 sm:py-32">
+      {/* How It Works */}
+      <section className="relative z-10 py-24 px-4">
         <div className="section-divider mb-24" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="text-center mb-20">
-            <span className="badge-accent mb-6 inline-flex"><JobContract className="w-3.5 h-3.5" />Simple Flow</span>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">How It{' '}<span className="text-accent text-glow">Works</span></h2>
-            <p className="text-white/40 max-w-xl mx-auto text-lg">Four steps to privacy-preserving freelance work.</p>
+        <div className="max-w-5xl mx-auto">
+          <motion.div variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
+            <span className="badge-accent mb-6 inline-flex">Simple Flow</span>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4">How It <span style={{ color: '#87FF8B', textShadow: '0 0 30px rgba(135,255,139,0.3)' }}>Works</span></h2>
           </motion.div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {STEPS.map((step, i) => (
-              <motion.div key={step.num} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.12, duration: 0.6 }} className="relative">
-                {i < STEPS.length - 1 && <div className="hidden lg:block absolute top-12 left-[60%] w-[80%] h-px bg-gradient-to-r from-accent/20 to-transparent" />}
-                <div className="glass-glow p-6 sm:p-8 text-center relative overflow-hidden group">
-                  <span className="text-5xl font-bold text-accent/10 absolute top-4 right-4 select-none group-hover:text-accent/20 transition-colors duration-500">{step.num}</span>
-                  <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-5 group-hover:bg-accent/20 group-hover:shadow-[0_0_25px_rgba(0,240,255,0.15)] transition-all duration-500">
-                    <step.icon className="w-7 h-7 text-accent" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
-                  <p className="text-sm text-white/40 leading-relaxed">{step.desc}</p>
+              <motion.div key={step.num} variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i * 0.5}>
+                <div className="liquid-glass p-7 text-center relative group h-full">
+                  <div
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-5 transition-all duration-300"
+                    style={{ background: 'rgba(135,255,139,0.08)', border: '1px solid rgba(135,255,139,0.12)' }}
+                  >{step.icon}</div>
+                  <div className="text-6xl font-black absolute top-4 right-5 select-none" style={{ color: 'rgba(135,255,139,0.06)' }}>{step.num}</div>
+                  <h3 className="text-sm font-bold mb-2 uppercase tracking-wider">{step.title}</h3>
+                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(212,190,236,0.55)' }}>{step.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -140,53 +179,74 @@ export const Home: FC = () => {
         </div>
       </section>
 
-      {/* ───── Video Showcase ───── */}
-      <section className="relative z-10 py-24 sm:py-32">
+      {/* Video */}
+      <section className="relative z-10 py-24 px-4">
         <div className="section-divider mb-24" />
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">See It in <span className="text-accent text-glow">Action</span></h2>
-            <p className="text-white/40 max-w-lg mx-auto">Watch how ZKWork enables private, trustless freelance agreements on Aleo.</p>
+        <div className="max-w-4xl mx-auto">
+          <motion.div variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3">See ZKWork in <span style={{ color: '#87FF8B', textShadow: '0 0 30px rgba(135,255,139,0.3)' }}>Action</span></h2>
+            <p style={{ color: 'rgba(212,190,236,0.5)' }}>Watch the full end-to-end flow on Aleo Testnet.</p>
           </motion.div>
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="relative rounded-2xl overflow-hidden border border-white/[0.08] shadow-[0_0_60px_rgba(0,240,255,0.06)]">
-            <div className="aspect-video bg-surface-900"><VideoPlayer src={MUX_URL} className="w-full h-full object-cover" /></div>
-            <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 0 40px rgba(0,240,255,0.04)' }} />
+          <motion.div
+            variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}
+            className="relative rounded-2xl overflow-hidden"
+            style={{ border: '1px solid rgba(135,255,139,0.1)', boxShadow: '0 0 60px rgba(135,255,139,0.04)' }}
+          >
+            <div className="aspect-video flex flex-col items-center justify-center gap-4" style={{ background: 'linear-gradient(135deg, #0d0812 0%, #110c17 50%, #1a1325 100%)' }}>
+              <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl" style={{ background: 'rgba(135,255,139,0.08)', border: '2px solid rgba(135,255,139,0.2)', boxShadow: '0 0 40px rgba(135,255,139,0.1)' }}>▶</div>
+              <p className="text-sm font-medium" style={{ color: 'rgba(212,190,236,0.5)' }}>Demo video coming soon</p>
+            </div>
           </motion.div>
         </div>
       </section>
 
-      {/* ───── CTA ───── */}
-      <section className="relative z-10 py-24 sm:py-32">
+      {/* CTA */}
+      <section className="relative z-10 py-24 px-4">
         <div className="section-divider mb-24" />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7 }} className="relative glass-glow p-10 sm:p-16 text-center overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-accent/[0.04] via-transparent to-accent/[0.02] pointer-events-none" />
+        <div className="max-w-3xl mx-auto">
+          <motion.div
+            variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}
+            className="liquid-glass p-12 sm:p-16 text-center relative overflow-hidden"
+          >
+            <div className="orb orb-green w-64 h-64 -top-20 left-1/2 -translate-x-1/2" style={{ opacity: 0.08 }} />
             <div className="relative z-10">
-              <motion.div initial={{ scale: 0.8, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.5 }} className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-8">
-                <PrivacyShield className="w-8 h-8 text-accent" />
-              </motion.div>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6">Ready to work{' '}<span className="text-accent text-glow">anonymously?</span></h2>
-              <p className="text-white/40 mb-10 max-w-lg mx-auto text-lg leading-relaxed">Connect your wallet, register your skills, and start earning — all while keeping your identity completely private.</p>
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-8" style={{ background: 'rgba(135,255,139,0.1)', border: '1px solid rgba(135,255,139,0.2)' }}>🚀</div>
+              <h2 className="text-3xl sm:text-4xl font-bold mb-5">
+                Ready to work <span style={{ color: '#87FF8B', textShadow: '0 0 30px rgba(135,255,139,0.3)' }}>anonymously?</span>
+              </h2>
+              <p className="mb-10 max-w-lg mx-auto leading-relaxed" style={{ color: 'rgba(212,190,236,0.6)' }}>
+                Connect your Shield wallet, register your skills, and start earning  all while keeping your identity completely private on Aleo.
+              </p>
               <div className="flex flex-wrap justify-center gap-4">
-                <Link to="/register" className="btn-primary text-lg px-8 py-4">Get Started</Link>
-                <Link to="/jobs" className="btn-secondary text-lg px-8 py-4">Explore Jobs</Link>
+                <Link to="/register" className="btn-primary px-8 py-4 text-base">Get Started Free</Link>
+                <Link to="/jobs" className="btn-secondary px-8 py-4 text-base">Explore Jobs</Link>
               </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* ───── Footer ───── */}
-      <footer className="relative z-10 border-t border-white/[0.06] py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center"><PrivacyShield className="w-4 h-4 text-accent" /></div>
-            <span className="text-sm font-bold tracking-tight">ZK<span className="text-accent">Work</span></span>
+      {/* Footer */}
+      <footer className="relative z-10 py-12 px-4" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(17,12,23,0.8)' }}>
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
+          <div>
+            <div className="text-lg font-black uppercase tracking-tight mb-1" style={{ color: '#87FF8B' }}>ZKWORK</div>
+            <p className="text-[10px] uppercase tracking-[0.25em]" style={{ color: 'rgba(212,190,236,0.35)' }}> 2026 ZKWork. Secured on Aleo Testnet.</p>
           </div>
-          <p className="text-xs text-white/25">Built on Aleo &middot; Zero-Knowledge Proofs &middot; Privacy Preserved</p>
-          <a href="https://github.com/Mr-Ben-dev/ZkWork" target="_blank" rel="noopener noreferrer" className="text-white/30 hover:text-accent transition-colors">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          </a>
+          <div className="flex gap-10 text-[10px] uppercase tracking-widest">
+            <div className="flex flex-col gap-3">
+              <span className="font-bold" style={{ color: 'rgba(255,255,255,0.3)' }}>Platform</span>
+              <a href="https://explorer.aleo.org" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-accent" style={{ color: 'rgba(212,190,236,0.5)' }}>Aleo Explorer</a>
+              <a href="https://github.com/Mr-Ben-dev/ZkWork" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-accent" style={{ color: 'rgba(212,190,236,0.5)' }}>GitHub</a>
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <span className="text-[10px] uppercase tracking-widest" style={{ color: 'rgba(212,190,236,0.35)' }}>Network Status</span>
+            <span className="text-[10px] font-bold flex items-center gap-2" style={{ color: '#87FF8B' }}>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#87FF8B', boxShadow: '0 0 8px #87FF8B' }} />
+              Testnet Active
+            </span>
+          </div>
         </div>
       </footer>
     </div>

@@ -4,8 +4,7 @@ import { useZKWorkWallet } from '../hooks/useZKWorkWallet';
 import { useUserStore } from '../stores/userStore';
 import { apiClient } from '../lib/api';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { ReputationStar, ZKBadge } from '../components/icons';
-import { AnimatedBackground } from '../components/ui/AnimatedBackground';
+
 
 export const Reputation: FC = () => {
   const { connected, executeTransition, findRecord, findRecordWithRetry, authenticate } = useZKWorkWallet();
@@ -177,14 +176,11 @@ export const Reputation: FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="relative min-h-screen">
-        <AnimatedBackground />
-        <div className="relative z-10 max-w-3xl mx-auto px-4 py-20 text-center">
-          <div className="w-20 h-20 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-6">
-            <ReputationStar className="w-10 h-10 text-accent" />
-          </div>
+      <div className="relative min-h-screen flex items-center justify-center" style={{ background: '#0d0812' }}>
+        <div className="text-center">
+          <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 text-4xl" style={{ background: 'rgba(135,255,139,0.06)', border: '1px solid rgba(135,255,139,0.1)' }}>⭐</div>
           <h1 className="text-2xl font-bold mb-2">Reputation</h1>
-          <p className="text-white/40">Sign in to manage your ZK reputation.</p>
+          <p style={{ color: 'rgba(212,190,236,0.45)' }}>Sign in to manage your ZK reputation.</p>
         </div>
       </div>
     );
@@ -199,32 +195,31 @@ export const Reputation: FC = () => {
   }
 
   return (
-    <div className="relative min-h-screen">
-      <AnimatedBackground />
+    <div className="relative min-h-screen" style={{ background: '#0d0812' }}>
+      <div className="orb orb-green w-[500px] h-[500px] -top-40 -right-48" style={{ opacity: 0.06 }} />
+      <div className="orb orb-purple w-[400px] h-[400px] top-1/2 -left-32" style={{ opacity: 0.07 }} />
       <div className="relative z-10 max-w-3xl mx-auto px-4 py-10">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="glass-glow p-6 sm:p-8 mb-8">
+        <div className="liquid-glass p-6 sm:p-8 mb-8">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shadow-lg shadow-accent/10">
-              <ReputationStar className="w-6 h-6 text-accent" />
-            </div>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: 'rgba(135,255,139,0.08)', border: '1px solid rgba(135,255,139,0.15)' }}>⭐</div>
             <div>
               <h1 className="text-2xl font-bold">ZK Reputation</h1>
-              <p className="text-sm text-white/40">
+              <p className="text-sm" style={{ color: 'rgba(212,190,236,0.45)' }}>
                 Build and prove your work history without revealing your identity.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-accent/20 to-cyan-500/10 flex items-center justify-center shadow-lg shadow-accent/20">
+          <div className="flex items-center gap-4 p-4 rounded-xl" style={{ background: 'rgba(26,19,37,0.6)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(135,255,139,0.1)', border: '1px solid rgba(135,255,139,0.2)' }}>
               <span className="text-3xl font-bold text-accent">
                 {reputation?.claimedJobs ?? 0}
               </span>
             </div>
             <div>
               <p className="text-lg font-semibold">Jobs Completed</p>
-              <p className="text-sm text-white/40">
+              <p className="text-sm" style={{ color: 'rgba(212,190,236,0.45)' }}>
                 {reputation?.updatedAt
                   ? `Last updated ${new Date(reputation.updatedAt).toLocaleDateString()}`
                   : 'No reputation claimed yet'}
@@ -246,19 +241,19 @@ export const Reputation: FC = () => {
         )}
 
         {agreements.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-glow p-6 sm:p-8 mb-6">
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-6 sm:p-8 mb-6">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <span className="text-accent">✓</span>
               Completed Jobs — Claim Reputation
             </h2>
             <div className="space-y-3">
               {agreements.map((ag) => (
-                <div key={ag.commitment} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] transition-all duration-300">
+                <div key={ag.commitment} className="glass-hover flex items-center justify-between p-4 rounded-xl transition-all duration-300">
                   <div>
-                    <p className="text-sm font-mono text-white/60">
+                    <p className="text-sm font-mono" style={{ color: 'rgba(212,190,236,0.55)' }}>
                       {ag.commitment.slice(0, 20)}...
                     </p>
-                    <p className="text-xs text-white/30 mt-1">
+                    <p className="text-xs mt-1" style={{ color: 'rgba(212,190,236,0.35)' }}>
                       {ag.amount} {ag.currency?.toUpperCase()}
                     </p>
                   </div>
@@ -279,18 +274,18 @@ export const Reputation: FC = () => {
           </motion.div>
         )}
 
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-glow p-6 sm:p-8">
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card p-6 sm:p-8">
           <div className="flex items-center gap-2 mb-4">
-            <ZKBadge className="w-5 h-5 text-accent" />
+            <span className="text-xl">🔐</span>
             <h2 className="text-lg font-semibold">Prove Threshold</h2>
           </div>
-          <p className="text-sm text-white/40 mb-4">
+          <p className="text-sm mb-4" style={{ color: 'rgba(212,190,236,0.45)' }}>
             Generate a zero-knowledge proof that you have completed at least N jobs,
             without revealing your exact count or identity.
           </p>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-white/60 mb-2">
+              <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>
                 Minimum jobs threshold
               </label>
               <input
@@ -303,10 +298,10 @@ export const Reputation: FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm text-white/60 mb-2">
+              <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>
                 Verifier address
               </label>
-              <p className="text-xs text-white/30 mb-2">
+              <p className="text-xs mb-2" style={{ color: 'rgba(212,190,236,0.3)' }}>
                 The Aleo address of whoever you want to prove your reputation to (e.g. a potential client).
                 They will receive a private ThresholdProof record on-chain. Ask them for their address.
               </p>

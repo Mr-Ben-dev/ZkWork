@@ -6,7 +6,6 @@ import { useUserStore } from '../stores/userStore';
 import { apiClient } from '../lib/api';
 import { displayToMicro } from '../lib/aleo';
 import { stringToField, randomField } from '../lib/commitment';
-import { JobContract } from '../components/icons';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 
 const SKILL_OPTIONS = [
@@ -14,6 +13,12 @@ const SKILL_OPTIONS = [
   'Python', 'Smart Contracts', 'Frontend', 'Backend', 'DevOps',
   'Security Audit', 'UI/UX Design', 'Data Science', 'Machine Learning',
 ];
+
+const CURRENCY_META = {
+  aleo: { icon: '⚡', label: 'ALEO' },
+  usdcx: { icon: '💵', label: 'USDCx' },
+  usad: { icon: '🪙', label: 'USAD' },
+};
 
 export const PostJob: FC = () => {
   const navigate = useNavigate();
@@ -30,9 +35,7 @@ export const PostJob: FC = () => {
   const [error, setError] = useState('');
 
   const toggleSkill = (skill: string) => {
-    setSkills((prev) =>
-      prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]
-    );
+    setSkills((prev) => prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]);
   };
 
   const handleSubmit = async () => {
@@ -65,16 +68,8 @@ export const PostJob: FC = () => {
 
       const txId = await executeTransition(
         'post_job',
-        [
-          descriptionHash,
-          `${budgetMicro}u64`,
-          currencyCode,
-          categoryHash,
-          `${deadlineBlock}u64`,
-          salt,
-        ],
-        500_000,
-        'post_job',
+        [descriptionHash, `${budgetMicro}u64`, currencyCode, categoryHash, `${deadlineBlock}u64`, salt],
+        500_000, 'post_job',
         { title, description, skills }
       );
 
@@ -85,32 +80,16 @@ export const PostJob: FC = () => {
       }
 
       const commitment = salt;
-
-      const jobPayload = {
-        commitment,
-        title: title.trim(),
-        description: description.trim(),
-        budget: parseFloat(budget),
-        currency,
-        skills,
-        deadline,
-        txId,
-      };
+      const jobPayload = { commitment, title: title.trim(), description: description.trim(), budget: parseFloat(budget), currency, skills, deadline, txId };
 
       try {
         await apiClient.createJob(jobPayload);
       } catch (apiErr: any) {
-        // Token may have expired during the long on-chain TX — re-auth and retry
         if (apiErr.message?.includes('expired') || apiErr.message?.includes('401')) {
           const reauthed = await authenticate();
-          if (reauthed) {
-            await apiClient.createJob(jobPayload);
-          } else {
-            throw new Error('Transaction succeeded on-chain but failed to save. Re-authenticate and visit Dashboard to sync.');
-          }
-        } else {
-          throw apiErr;
-        }
+          if (reauthed) { await apiClient.createJob(jobPayload); }
+          else { throw new Error('Transaction succeeded on-chain but failed to save. Re-authenticate and visit Dashboard to sync.'); }
+        } else { throw apiErr; }
       }
 
       navigate('/jobs');
@@ -122,131 +101,109 @@ export const PostJob: FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen">
-      <div className="max-w-2xl mx-auto px-4 py-12">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-        <div className="flex items-center gap-4 mb-10">
-          <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shadow-[0_0_20px_rgba(0,240,255,0.08)]">
-            <JobContract className="w-6 h-6 text-accent" />
-          </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Post a Job</h1>
-            <p className="text-sm text-white/40">Job details stored off-chain. Only commitments go on-chain.</p>
-          </div>
-        </div>
+    <div className="relative min-h-screen" style={{ background: '#0d0812' }}>
+      <div className="orb orb-green w-[500px] h-[500px] -top-48 left-1/2 -translate-x-1/2" style={{ opacity: 0.07 }} />
+      <div className="orb orb-purple w-[400px] h-[400px] top-1/2 -right-48" style={{ opacity: 0.06 }} />
 
-        <div className="glass-glow p-6 sm:p-8 space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-white/60 mb-2">Job Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g., Leo Smart Contract Developer"
-              className="input-field"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white/60 mb-2">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe the job requirements, deliverables, and timeline..."
-              rows={5}
-              className="input-field resize-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white/60 mb-2">Required Skills</label>
-            <div className="flex flex-wrap gap-2">
-              {SKILL_OPTIONS.map((skill) => (
-                <button
-                  key={skill}
-                  onClick={() => toggleSkill(skill)}
-                  className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all duration-300 border ${
-                    skills.includes(skill)
-                      ? 'bg-accent/15 border-accent/30 text-accent shadow-[0_0_12px_rgba(0,240,255,0.1)]'
-                      : 'bg-white/[0.04] border-white/[0.08] text-white/50 hover:bg-white/[0.08] hover:border-white/[0.15]'
-                  }`}
-                >
-                  {skill}
-                </button>
-              ))}
+      <div className="relative z-10 max-w-2xl mx-auto px-4 py-12">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <div className="flex items-center gap-4 mb-10">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style={{ background: 'rgba(135,255,139,0.08)', border: '1px solid rgba(135,255,139,0.15)' }}>📝</div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">Post a Job</h1>
+              <p className="text-sm" style={{ color: 'rgba(212,190,236,0.45)' }}>Job details stored off-chain. Only commitments go on-chain.</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="liquid-glass p-6 sm:p-8 space-y-7">
+            {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-white/60 mb-2">Budget</label>
-              <input
-                type="number"
-                value={budget}
-                onChange={(e) => setBudget(e.target.value)}
-                placeholder="100.00"
-                min="0"
-                step="0.01"
-                className="input-field"
-              />
+              <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>Job Title</label>
+              <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Leo Smart Contract Developer" className="input-field" />
             </div>
+
+            {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-white/60 mb-2">Currency</label>
-              <div className="flex gap-2">
-                {(['aleo', 'usdcx', 'usad'] as const).map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setCurrency(c)}
-                    className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-300 border ${
-                      currency === c
-                        ? 'bg-accent/15 border-accent/30 text-accent shadow-[0_0_15px_rgba(0,240,255,0.1)]'
-                        : 'bg-white/[0.04] border-white/[0.08] text-white/50 hover:bg-white/[0.08]'
-                    }`}
-                  >
-                    {c.toUpperCase()}
-                  </button>
+              <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>Description</label>
+              <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the job requirements, deliverables, and timeline..." rows={5} className="input-field resize-none" />
+            </div>
+
+            {/* Skills */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(212,190,236,0.5)' }}>Required Skills</label>
+              <div className="flex flex-wrap gap-2">
+                {SKILL_OPTIONS.map((skill) => (
+                  <button key={skill} onClick={() => toggleSkill(skill)}
+                    className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300"
+                    style={skills.includes(skill)
+                      ? { background: '#87FF8B', color: '#00390c', boxShadow: '0 0 12px rgba(135,255,139,0.25)' }
+                      : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(212,190,236,0.5)' }
+                    }
+                  >{skill}</button>
                 ))}
               </div>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-white/60 mb-2">Deadline</label>
-            <input
-              type="date"
-              value={deadline}
-              onChange={(e) => setDeadline(e.target.value)}
-              className="input-field"
-              min={new Date().toISOString().split('T')[0]}
-            />
-          </div>
-
-          {error && (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
-              {error}
+            {/* Budget + Currency */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>Budget</label>
+                <input type="number" value={budget} onChange={(e) => setBudget(e.target.value)} placeholder="100.00" min="0" step="0.01" className="input-field" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>Currency</label>
+                <div className="flex gap-2">
+                  {(Object.entries(CURRENCY_META) as [string, { icon: string; label: string }][]).map(([c, meta]) => (
+                    <button key={c} type="button" onClick={() => setCurrency(c as 'aleo' | 'usdcx' | 'usad')}
+                      className="flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300"
+                      style={currency === c
+                        ? { background: '#87FF8B', color: '#00390c', boxShadow: '0 0 15px rgba(135,255,139,0.2)' }
+                        : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(212,190,236,0.5)' }
+                      }
+                    >{meta.icon} {meta.label}</button>
+                  ))}
+                </div>
+              </div>
             </div>
-          )}
 
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-base"
-          >
-            {submitting ? (
-              <>
-                <LoadingSpinner size={18} />
-                Posting on-chain...
-              </>
-            ) : (
-              <>
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-                Post Job
-              </>
+            {/* Deadline */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>Deadline</label>
+              <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="input-field" min={new Date().toISOString().split('T')[0]} />
+            </div>
+
+            {error && (
+              <div className="p-4 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: 'rgb(252,165,165)' }}>{error}</div>
             )}
-          </button>
-        </div>
-      </motion.div>
+
+            <button onClick={handleSubmit} disabled={submitting} className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-base">
+              {submitting ? (<><LoadingSpinner size={18} />Posting on-chain...</>) : (<>📤 Post Job</>)}
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+                </div>
+              </div>
+            </div>
+
+            {/* Deadline */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>Deadline</label>
+              <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="input-field" min={new Date().toISOString().split('T')[0]} />
+            </div>
+
+            {error && (
+              <div className="p-4 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: 'rgb(252,165,165)' }}>{error}</div>
+            )}
+
+            <button onClick={handleSubmit} disabled={submitting} className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-base">
+              {submitting ? (<><LoadingSpinner size={18} />Posting on-chain...</>) : (<>📤 Post Job</>)}
+            </button>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

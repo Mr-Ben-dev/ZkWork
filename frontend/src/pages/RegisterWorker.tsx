@@ -5,9 +5,7 @@ import { useZKWorkWallet } from '../hooks/useZKWorkWallet';
 import { useUserStore } from '../stores/userStore';
 import { apiClient } from '../lib/api';
 import { randomField } from '../lib/commitment';
-import { AnonAvatar } from '../components/icons';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { AnimatedBackground } from '../components/ui/AnimatedBackground';
 
 const SKILL_OPTIONS = [
   'Solidity', 'Leo', 'Rust', 'TypeScript', 'React', 'Node.js',
@@ -23,7 +21,7 @@ export const RegisterWorker: FC = () => {
   const [skills, setSkills] = useState<string[]>([]);
   const [bio, setBio] = useState('');
   const [ratePerHour, setRatePerHour] = useState('');
-  const [currency, setCurrency] = useState<'aleo' | 'usdcx'>('aleo');
+  const [currency, setCurrency] = useState<'aleo' | 'usdcx' | 'usad'>('aleo');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -77,44 +75,37 @@ export const RegisterWorker: FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen">
-      <AnimatedBackground />
+    <div className="relative min-h-screen" style={{ background: '#0d0812' }}>
+      <div className="orb orb-green w-[500px] h-[500px] -top-48 left-1/2 -translate-x-1/2" style={{ opacity: 0.07 }} />
       <div className="relative z-10 max-w-2xl mx-auto px-4 py-10">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="glass-glow p-6 sm:p-8 mb-8">
+        <div className="liquid-glass p-6 sm:p-8 mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shadow-lg shadow-accent/10">
-              <AnonAvatar className="w-6 h-6 text-accent" />
-            </div>
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl" style={{ background: 'rgba(135,255,139,0.08)', border: '1px solid rgba(135,255,139,0.15)' }}>👤</div>
             <div>
               <h1 className="text-2xl font-bold">Register as Worker</h1>
-              <p className="text-sm text-white/40">Your profile stays private — stored as a Leo record.</p>
+              <p className="text-sm" style={{ color: 'rgba(212,190,236,0.45)' }}>Your profile stays private — stored as a Leo record.</p>
             </div>
           </div>
         </div>
 
-        <div className="glass-glow p-6 sm:p-8 space-y-6">
+        <div className="liquid-glass p-6 sm:p-8 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-white/60 mb-3">Skills</label>
+            <label className="block text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(212,190,236,0.5)' }}>Skills</label>
             <div className="flex flex-wrap gap-2">
               {SKILL_OPTIONS.map((skill) => (
-                <button
-                  key={skill}
-                  onClick={() => toggleSkill(skill)}
-                  className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all border ${
-                    skills.includes(skill)
-                      ? 'bg-accent/20 border-accent/40 text-accent shadow-lg shadow-accent/20'
-                      : 'bg-white/[0.04] border-white/[0.08] text-white/50 hover:bg-white/[0.08]'
-                  }`}
-                >
-                  {skill}
-                </button>
+                <button key={skill} onClick={() => toggleSkill(skill)}
+                  className="px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300"
+                  style={skills.includes(skill)
+                    ? { background: '#87FF8B', color: '#00390c', boxShadow: '0 0 12px rgba(135,255,139,0.25)' }
+                    : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(212,190,236,0.5)' }
+                  }>{skill}</button>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-white/60 mb-2">Bio</label>
+            <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>Bio</label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
@@ -126,7 +117,7 @@ export const RegisterWorker: FC = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-white/60 mb-2">Rate / Hour</label>
+              <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>Rate / Hour</label>
               <input
                 type="number"
                 value={ratePerHour}
@@ -138,30 +129,22 @@ export const RegisterWorker: FC = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-white/60 mb-2">Currency</label>
+              <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>Currency</label>
               <div className="flex gap-2">
-                {(['aleo', 'usdcx'] as const).map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setCurrency(c)}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all border ${
-                      currency === c
-                        ? 'bg-accent/20 border-accent/40 text-accent shadow-lg shadow-accent/20'
-                        : 'bg-white/[0.04] border-white/[0.08] text-white/50 hover:bg-white/[0.08]'
-                    }`}
-                  >
-                    {c.toUpperCase()}
-                  </button>
+                {(['aleo', 'usdcx', 'usad'] as const).map((c) => (
+                  <button key={c} type="button" onClick={() => setCurrency(c)}
+                    className="flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+                    style={currency === c
+                      ? { background: '#87FF8B', color: '#00390c', boxShadow: '0 0 15px rgba(135,255,139,0.2)' }
+                      : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(212,190,236,0.5)' }
+                    }>{c.toUpperCase()}</button>
                 ))}
               </div>
             </div>
           </div>
 
           {error && (
-            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
-              {error}
-            </div>
+            <div className="p-4 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: 'rgb(252,165,165)' }}>{error}</div>
           )}
 
           <button

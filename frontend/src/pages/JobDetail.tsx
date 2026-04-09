@@ -8,8 +8,6 @@ import { randomField, stringToField } from '../lib/commitment';
 import { displayToMicro } from '../lib/aleo';
 import { StatusBadge } from '../components/ui/StatusBadge';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
-import { JobContract } from '../components/icons';
-import { AnimatedBackground } from '../components/ui/AnimatedBackground';
 
 export const JobDetail: FC = () => {
   const { commitment } = useParams<{ commitment: string }>();
@@ -205,53 +203,51 @@ export const JobDetail: FC = () => {
 
   if (!job) {
     return (
-      <div className="relative min-h-screen">
-        <AnimatedBackground />
-        <div className="relative z-10 max-w-3xl mx-auto px-4 py-20 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center mx-auto mb-6">
-            <JobContract className="w-8 h-8 text-accent" />
-          </div>
-          <p className="text-white/40">Job not found</p>
+      <div className="relative min-h-screen flex items-center justify-center" style={{ background: '#0d0812' }}>
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-6" style={{ background: 'rgba(135,255,139,0.06)', border: '1px solid rgba(135,255,139,0.1)' }}>💼</div>
+          <p style={{ color: 'rgba(212,190,236,0.45)' }}>Job not found</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen">
-      <AnimatedBackground />
+    <div className="relative min-h-screen" style={{ background: '#0d0812' }}>
+      <div className="orb orb-green w-[500px] h-[500px] -top-40 -right-48" style={{ opacity: 0.06 }} />
+      <div className="orb orb-purple w-[400px] h-[400px] top-1/2 -left-32" style={{ opacity: 0.07 }} />
       <div className="relative z-10 max-w-3xl mx-auto px-4 py-10">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="glass-glow p-6 sm:p-8 mb-6">
+        <div className="liquid-glass p-6 sm:p-8 mb-6">
           <div className="flex items-start justify-between mb-4">
             <h1 className="text-2xl font-bold flex-1 mr-4">{job.title}</h1>
             <StatusBadge status={job.status} />
           </div>
-          <p className="text-white/50 mb-4 leading-relaxed">{job.description}</p>
+          <p className="mb-4 leading-relaxed" style={{ color: 'rgba(212,190,236,0.55)' }}>{job.description}</p>
           <div className="flex flex-wrap gap-2 mb-4">
             {job.skills?.map((s: string) => (
               <span key={s} className="badge-accent">{s}</span>
             ))}
           </div>
-          <div className="flex items-center gap-6 text-sm p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-            <span className="text-accent font-semibold">
+          <div className="flex items-center gap-6 text-sm p-3 rounded-xl" style={{ background: 'rgba(26,19,37,0.6)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <span className="font-bold" style={{ color: '#87FF8B' }}>
               {job.budget} {job.currency?.toUpperCase()}
             </span>
-            <span className="text-white/30">
+            <span style={{ color: 'rgba(212,190,236,0.35)' }}>
               Deadline: {new Date(job.deadline).toLocaleDateString()}
             </span>
-            <span className="text-white/30">
+            <span style={{ color: 'rgba(212,190,236,0.35)' }}>
               {applications.length} applicant{applications.length !== 1 ? 's' : ''}
             </span>
           </div>
         </div>
 
         {job.status === 'open' && isAuthenticated && (
-          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-glow p-6 sm:p-8 mb-6">
-            <h2 className="text-lg font-semibold mb-4">Apply for this Job</h2>
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card p-6 sm:p-8 mb-6">
+            <h2 className="text-base font-bold mb-4">Apply for this Job</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-white/60 mb-2">Cover Letter</label>
+                <label className="block text-xs uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>Cover Letter</label>
                 <textarea
                   value={coverLetter}
                   onChange={(e) => setCoverLetter(e.target.value)}
@@ -261,7 +257,7 @@ export const JobDetail: FC = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm text-white/60 mb-2">Proposed Rate</label>
+                <label className="block text-xs uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>Proposed Rate</label>
                 <input
                   type="number"
                   value={proposedRate}
@@ -272,9 +268,7 @@ export const JobDetail: FC = () => {
                   className="input-field max-w-xs"
                 />
               </div>
-              {error && (
-                <p className="text-sm text-red-400">{error}</p>
-              )}
+              {error && (<p className="text-sm" style={{ color: 'rgb(252,165,165)' }}>{error}</p>)}
               <button
                 onClick={handleApply}
                 disabled={applying}
@@ -287,12 +281,12 @@ export const JobDetail: FC = () => {
         )}
 
         {applications.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-glow p-6 sm:p-8">
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card p-6 sm:p-8">
             <h2 className="text-lg font-semibold mb-4">Applications</h2>
             <div className="space-y-3">
               {applications.map((app) => (
-                <div key={app.id} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] transition-all duration-300">
-                  <p className="text-sm text-white/60 mb-2">{app.coverLetter}</p>
+                <div key={app.id} className="p-4 rounded-xl transition-all duration-300" style={{ background: 'rgba(26,19,37,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <p className="text-sm mb-2" style={{ color: 'rgba(212,190,236,0.6)' }}>{app.coverLetter}</p>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-accent font-medium">
                       Rate: {app.proposedRate} {job.currency?.toUpperCase()}

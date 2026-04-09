@@ -222,4 +222,47 @@ router.patch('/:commitment', authMiddleware, async (req: AuthRequest, res: Respo
   }
 });
 
+
+// POST /:commitment/dispute — raise a dispute for arbitration
+router.post('/:commitment/dispute', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { commitment } = req.params;
+    const address = req.userAddress!;
+    const addrHash = hashAddress(address);
+    const db = await getDB();
+    const agreement = db.data.agreements[commitment];
+    if (!agreement) {
+      res.status(404).json({ error: 'Agreement not found' });
+      return;
+    }
+    if (agreement.clientHash !== addrHash && agreement.workerHash !== addrHash) {
+      res.status(403).json({ error: 'Unauthorized' });
+      return;
+    }
+    if (agreement.status === 'completed' || agreement.status === 'cancelled') {
+      res.status(400).json({ error: 'Cannot raise a dispute on a completed or cancelled agreement' });
+      return;
+    }
+    if (agreement.status === 'disputed') {
+      res.status(400).json({ error: 'Dispute already raised' });
+      return;
+    }
+    const { reason } = req.body;
+    if (!reason || typeof reason !== 'string' || !reason.trim()) {
+      res.status(400).json({ error: 'Dispute reason is required' });
+      return;
+    }
+    agreement.status = 'disputed';
+    agreement.disputeReason = reason.trim();
+    agreement.disputeRaisedAt = new Date().toISOString();
+    agreement.disputeRaisedByHash = addrHash;
+    await saveDB();
+    await logEvent('dispute_raised', addrHash, { agreementCommitment: commitment });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[Agreements] Dispute error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;
