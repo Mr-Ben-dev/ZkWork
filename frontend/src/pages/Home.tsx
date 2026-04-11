@@ -1,26 +1,92 @@
-import { FC } from 'react';
+import { FC, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+
+const IconShield = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+);
+const IconLock = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2"/>
+    <path d="M7 11V7a5 5 0 0110 0v4"/>
+  </svg>
+);
+const IconStar = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+  </svg>
+);
+const IconUser = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+    <circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+const IconFile = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/>
+    <line x1="16" y1="13" x2="8" y2="13"/>
+    <line x1="16" y1="17" x2="8" y2="17"/>
+  </svg>
+);
+const IconKey = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+  </svg>
+);
+const IconLink = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+    <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+  </svg>
+);
+const IconEdit = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+  </svg>
+);
+const IconDollar = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/>
+    <line x1="12" y1="8" x2="12" y2="16"/>
+    <path d="M14.5 10H10.5a2 2 0 000 4h3a2 2 0 010 4H9"/>
+  </svg>
+);
+const IconAward = () => (
+  <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="6"/>
+    <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+  </svg>
+);
+const IconZap = () => (
+  <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+  </svg>
+);
 
 const fade = {
   hidden: { opacity: 0, y: 28 },
   show: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.12, duration: 0.65, ease: [0.25, 0.4, 0.25, 1] } }),
 };
 
-const FEATURES = [
-  { icon: '🛡️', title: 'Zero-Knowledge Privacy', desc: 'Your identity never leaves your wallet. All on-chain data uses BHP256 commitments — no addresses, no amounts exposed.' },
-  { icon: '🔒', title: 'Trustless Escrow', desc: 'Funds locked on-chain in Leo smart contracts. Released atomically on completion. No middlemen, no custody risk.' },
-  { icon: '⭐', title: 'Private Reputation', desc: 'Build verifiable work history without revealing identity. Prove you exceed job thresholds without showing exact scores.' },
-  { icon: '👤', title: 'Anonymous Profiles', desc: 'Register as a worker with skills and rates. Your profile is a private Leo record — only you control what is visible.' },
-  { icon: '📜', title: 'On-Chain Agreements', desc: 'Every agreement is a cryptographically signed Leo record. Deliverables, completions, and payments are all bound on-chain.' },
-  { icon: '🔏', title: 'ZK Credentials', desc: 'Prove your completed job threshold to any verifier without revealing your total count or identity. Native ZK circuits.' },
+const FEATURES: { icon: ReactNode; title: string; desc: string }[] = [
+  { icon: <IconShield />, title: 'Zero-Knowledge Privacy', desc: 'Your identity never leaves your wallet. All on-chain data uses BHP256 commitments — no addresses, no amounts exposed.' },
+  { icon: <IconLock />, title: 'Trustless Escrow', desc: 'Funds locked on-chain in Leo smart contracts. Released atomically on completion. No middlemen, no custody risk.' },
+  { icon: <IconStar />, title: 'Private Reputation', desc: 'Build verifiable work history without revealing identity. Prove you exceed job thresholds without showing exact scores.' },
+  { icon: <IconUser />, title: 'Anonymous Profiles', desc: 'Register as a worker with skills and rates. Your profile is a private Leo record — only you control what is visible.' },
+  { icon: <IconFile />, title: 'On-Chain Agreements', desc: 'Every agreement is a cryptographically signed Leo record. Deliverables, completions, and payments are all bound on-chain.' },
+  { icon: <IconKey />, title: 'ZK Credentials', desc: 'Prove your completed job threshold to any verifier without revealing your total count or identity. Native ZK circuits.' },
 ];
 
-const STEPS = [
-  { num: '01', icon: '🔗', title: 'Connect Shield Wallet', desc: 'Connect your Shield wallet with maximum privacy. Your Aleo address is never shared publicly.' },
-  { num: '02', icon: '📝', title: 'Post or Apply', desc: 'Create a private job listing or browse available work. Everything stored as encrypted Leo records.' },
-  { num: '03', icon: '💰', title: 'Escrow Payment', desc: 'Funds locked on-chain in ALEO, USDCx, or USAD. Trustless, atomic, instant settlement.' },
-  { num: '04', icon: '🏆', title: 'Build Reputation', desc: 'Claim ZK reputation tokens. Prove your experience to anyone on-chain without revealing your identity.' },
+const STEPS: { num: string; icon: ReactNode; title: string; desc: string }[] = [
+  { num: '01', icon: <IconLink />, title: 'Connect Shield Wallet', desc: 'Connect your Shield wallet with maximum privacy. Your Aleo address is never shared publicly.' },
+  { num: '02', icon: <IconEdit />, title: 'Post or Apply', desc: 'Create a private job listing or browse available work. Everything stored as encrypted Leo records.' },
+  { num: '03', icon: <IconDollar />, title: 'Escrow Payment', desc: 'Funds locked on-chain in ALEO, USDCx, or USAD. Trustless, atomic, instant settlement.' },
+  { num: '04', icon: <IconAward />, title: 'Build Reputation', desc: 'Claim ZK reputation tokens. Prove your experience to anyone on-chain without revealing your identity.' },
 ];
 
 const STATS = [
@@ -46,27 +112,25 @@ export const Home: FC = () => {
       {/* Hero */}
       <section className="relative z-10 min-h-[92vh] flex flex-col items-center justify-center text-center px-4 pt-8 pb-16" style={{ overflow: 'hidden' }}>
         <div className="absolute inset-0">
-          {/* Deep space bg */}
+          {/* Deep space bg fallback */}
           <div className="absolute inset-0" style={{ background: '#060408' }} />
-          {/* Planet globe */}
-          <div
-            className="absolute left-1/2"
-            style={{
-              bottom: '-8%',
-              width: '120vw',
-              aspectRatio: '1 / 1',
-              transform: 'translateX(-50%)',
-              borderRadius: '50%',
-              background: 'radial-gradient(ellipse at 68% 30%, rgba(0,220,190,0.55) 0%, rgba(5,130,210,0.68) 16%, rgba(6,65,155,0.83) 36%, rgba(4,28,75,0.93) 56%, rgba(2,10,35,0.99) 78%)',
-              boxShadow: '0 0 260px rgba(0,140,255,0.28), 0 0 100px rgba(0,210,180,0.16)',
-            }}
-          />
+          {/* Background video */}
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ opacity: 0.72 }}
+          >
+            <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260309_042944_4a2205b7-b061-490a-852b-92d9e9955ce9.mp4" type="video/mp4" />
+          </video>
           {/* Top fade to space */}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, #060408 0%, rgba(6,4,8,0.75) 18%, transparent 50%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, #060408 0%, rgba(6,4,8,0.55) 15%, transparent 45%)' }} />
           {/* Bottom fade to page bg */}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #0d0812 0%, transparent 38%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, #0d0812 0%, rgba(13,8,18,0.7) 20%, transparent 50%)' }} />
           {/* Side vignettes */}
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(6,4,8,0.6) 0%, transparent 35%, transparent 65%, rgba(6,4,8,0.6) 100%)' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(6,4,8,0.55) 0%, transparent 30%, transparent 70%, rgba(6,4,8,0.55) 100%)' }} />
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto">
@@ -141,7 +205,7 @@ export const Home: FC = () => {
               <motion.div key={f.title} variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i * 0.5}>
                 <div className="glass-hover p-7 h-full group cursor-default">
                   <div
-                    className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mb-5 transition-all duration-300 group-hover:shadow-[0_0_24px_rgba(135,255,139,0.2)]"
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:shadow-[0_0_24px_rgba(135,255,139,0.2)] text-accent"
                     style={{ background: 'rgba(135,255,139,0.08)', border: '1px solid rgba(135,255,139,0.12)' }}
                   >{f.icon}</div>
                   <h3 className="text-base font-bold mb-2 tracking-tight">{f.title}</h3>
@@ -166,7 +230,7 @@ export const Home: FC = () => {
               <motion.div key={step.num} variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} custom={i * 0.5}>
                 <div className="liquid-glass p-7 text-center relative group h-full">
                   <div
-                    className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-5 transition-all duration-300"
+                    className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5 transition-all duration-300 text-accent"
                     style={{ background: 'rgba(135,255,139,0.08)', border: '1px solid rgba(135,255,139,0.12)' }}
                   >{step.icon}</div>
                   <div className="text-6xl font-black absolute top-4 right-5 select-none" style={{ color: 'rgba(135,255,139,0.06)' }}>{step.num}</div>
@@ -210,7 +274,7 @@ export const Home: FC = () => {
           >
             <div className="orb orb-green w-64 h-64 -top-20 left-1/2 -translate-x-1/2" style={{ opacity: 0.08 }} />
             <div className="relative z-10">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-8" style={{ background: 'rgba(135,255,139,0.1)', border: '1px solid rgba(135,255,139,0.2)' }}>🚀</div>
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-8" style={{ background: 'rgba(135,255,139,0.1)', border: '1px solid rgba(135,255,139,0.2)', color: '#87FF8B' }}><IconZap /></div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-5">
                 Ready to work <span style={{ color: '#87FF8B', textShadow: '0 0 30px rgba(135,255,139,0.3)' }}>anonymously?</span>
               </h2>
