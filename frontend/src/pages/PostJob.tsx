@@ -185,26 +185,3 @@ export const PostJob: FC = () => {
     </div>
   );
 };
-                </div>
-              </div>
-            </div>
-
-            {/* Deadline */}
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'rgba(212,190,236,0.5)' }}>Deadline</label>
-              <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="input-field" min={new Date().toISOString().split('T')[0]} />
-            </div>
-
-            {error && (
-              <div className="p-4 rounded-xl text-sm" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: 'rgb(252,165,165)' }}>{error}</div>
-            )}
-
-            <button onClick={handleSubmit} disabled={submitting} className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-base">
-              {submitting ? (<><LoadingSpinner size={18} />Posting on-chain...</>) : (<>📤 Post Job</>)}
-            </button>
-          </div>
-        </motion.div>
-      </div>
-    </div>
-  );
-};

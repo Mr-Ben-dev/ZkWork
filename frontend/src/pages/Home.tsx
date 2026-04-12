@@ -1,6 +1,7 @@
-import { FC, ReactNode } from 'react';
+import { FC, ReactNode, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { apiClient } from '../lib/api';
 
 const IconShield = () => (
   <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -102,6 +103,12 @@ const PARTNERS = [
 ];
 
 export const Home: FC = () => {
+  const [stats, setStats] = useState<{ jobs?: number; openJobs?: number; workers?: number; agreements?: number; activeAgreements?: number }>({});
+
+  useEffect(() => {
+    apiClient.getStats().then(setStats).catch(() => {});
+  }, []);
+
   return (
     <div className="relative min-h-screen overflow-hidden" style={{ background: '#0d0812' }}>
       {/* Ambient orbs */}
@@ -243,22 +250,128 @@ export const Home: FC = () => {
         </div>
       </section>
 
-      {/* Video */}
+      {/* ZK Stack */}
       <section className="relative z-10 py-24 px-4">
         <div className="section-divider mb-24" />
-        <div className="max-w-4xl mx-auto">
-          <motion.div variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3">See ZKWork in <span style={{ color: '#87FF8B', textShadow: '0 0 30px rgba(135,255,139,0.3)' }}>Action</span></h2>
-            <p style={{ color: 'rgba(212,190,236,0.5)' }}>Watch the full end-to-end flow on Aleo Testnet.</p>
+        <div className="max-w-6xl mx-auto">
+          <motion.div variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
+            <span className="badge-accent mb-6 inline-flex">Live Protocol</span>
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4">The ZK <span style={{ color: '#87FF8B', textShadow: '0 0 30px rgba(135,255,139,0.3)' }}>Stack</span></h2>
+            <p className="text-base max-w-xl mx-auto" style={{ color: 'rgba(212,190,236,0.6)' }}>Real on-chain activity. Real privacy. Fully verifiable smart contracts.</p>
           </motion.div>
-          <motion.div
-            variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}
-            className="relative rounded-2xl overflow-hidden"
-            style={{ border: '1px solid rgba(135,255,139,0.1)', boxShadow: '0 0 60px rgba(135,255,139,0.04)' }}
-          >
-            <div className="aspect-video flex flex-col items-center justify-center gap-4" style={{ background: 'linear-gradient(135deg, #0d0812 0%, #110c17 50%, #1a1325 100%)' }}>
-              <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl" style={{ background: 'rgba(135,255,139,0.08)', border: '2px solid rgba(135,255,139,0.2)', boxShadow: '0 0 40px rgba(135,255,139,0.1)' }}>▶</div>
-              <p className="text-sm font-medium" style={{ color: 'rgba(212,190,236,0.5)' }}>Demo video coming soon</p>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Leo Terminal */}
+            <motion.div variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} custom={0}>
+              <div className="liquid-glass rounded-2xl overflow-hidden h-full">
+                <div className="flex items-center gap-2 px-5 py-3 border-b" style={{ borderColor: 'rgba(135,255,139,0.08)', background: 'rgba(0,0,0,0.35)' }}>
+                  <span className="w-3 h-3 rounded-full" style={{ background: '#ff5f57' }} />
+                  <span className="w-3 h-3 rounded-full" style={{ background: '#febc2e' }} />
+                  <span className="w-3 h-3 rounded-full" style={{ background: '#28c840' }} />
+                  <span className="ml-3 text-[11px] font-mono" style={{ color: 'rgba(212,190,236,0.4)' }}>zkwork.leo  ·  Leo v2.1  ·  Aleo Testnet</span>
+                </div>
+                <pre className="p-6 text-[11px] sm:text-xs leading-7 overflow-x-auto font-mono select-none">
+                  <code>
+                    <span style={{ color: 'rgba(155,136,184,0.55)' }}>{'// post_job — creates a private Job record'}</span>{' \n'}
+                    <span style={{ color: '#87FF8B' }}>{'transition'}</span>{' '}<span style={{ color: '#60d9ff' }}>{'post_job'}</span>{'(\n'}
+                    {'    '}<span style={{ color: '#a78bfa' }}>{'desc_hash'}</span>{': '}<span style={{ color: '#fbbf24' }}>{'field'}</span>{',\n'}
+                    {'    '}<span style={{ color: '#a78bfa' }}>{'budget'}</span>{': '}<span style={{ color: '#fbbf24' }}>{'u64'}</span>{',\n'}
+                    {'    '}<span style={{ color: '#a78bfa' }}>{'currency'}</span>{': '}<span style={{ color: '#fbbf24' }}>{'u8'}</span>{',\n'}
+                    {'    '}<span style={{ color: '#a78bfa' }}>{'deadline'}</span>{': '}<span style={{ color: '#fbbf24' }}>{'u64'}</span>{',\n'}
+                    {'    '}<span style={{ color: '#a78bfa' }}>{'salt'}</span>{': '}<span style={{ color: '#fbbf24' }}>{'field'}</span>{',\n'}
+                    {') -> '}<span style={{ color: '#fbbf24' }}>{'Job'}</span>{' {\n'}
+                    {'    '}<span style={{ color: '#87FF8B' }}>{'let'}</span>{' commitment: '}<span style={{ color: '#fbbf24' }}>{'field'}</span>{' =\n'}
+                    {'        '}<span style={{ color: '#60d9ff' }}>{'BHP256'}</span>{'::'}<span style={{ color: '#60d9ff' }}>{'hash_to_field'}</span>{'(\n'}
+                    {'            desc_hash + salt\n'}
+                    {'        );\n'}
+                    {'\n'}
+                    {'    '}<span style={{ color: '#87FF8B' }}>{'return'}</span>{' Job {\n'}
+                    {'        owner: '}<span style={{ color: '#60d9ff' }}>{'self.caller'}</span>{',\n'}
+                    {'        commitment,\n'}
+                    {'        budget,\n'}
+                    {'        status: '}<span style={{ color: '#fbbf24' }}>{'0u8'}</span>{',\n'}
+                    {'    };\n'}
+                    {'}'}
+                  </code>
+                </pre>
+              </div>
+            </motion.div>
+
+            {/* Right column */}
+            <motion.div variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} custom={1} className="flex flex-col gap-5">
+              {/* Live Stats */}
+              <div className="liquid-glass rounded-2xl p-6">
+                <div className="flex items-center gap-2 mb-5">
+                  <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#87FF8B', boxShadow: '0 0 8px #87FF8B' }} />
+                  <span className="text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: '#87FF8B' }}>Live Network · Aleo Testnet</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {([
+                    { label: 'Jobs Posted', value: stats.jobs, icon: <IconFile /> },
+                    { label: 'Registered Workers', value: stats.workers, icon: <IconUser /> },
+                    { label: 'Agreements', value: stats.agreements, icon: <IconEdit /> },
+                    { label: 'Active Escrows', value: stats.activeAgreements, icon: <IconLock /> },
+                  ] as { label: string; value: number | undefined; icon: ReactNode }[]).map((item) => (
+                    <div key={item.label} className="p-4 rounded-xl" style={{ background: 'rgba(135,255,139,0.04)', border: '1px solid rgba(135,255,139,0.08)' }}>
+                      <div className="text-accent mb-2">{item.icon}</div>
+                      <div className="text-2xl font-black mb-0.5" style={{ color: '#87FF8B', textShadow: '0 0 20px rgba(135,255,139,0.2)' }}>
+                        {item.value !== undefined ? item.value : '—'}
+                      </div>
+                      <div className="text-[10px] uppercase tracking-widest" style={{ color: 'rgba(212,190,236,0.4)' }}>{item.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Security guarantees */}
+              <div className="liquid-glass rounded-2xl p-6 flex-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] mb-4" style={{ color: 'rgba(212,190,236,0.35)' }}>Security Guarantees</p>
+                {[
+                  { label: 'Commitment Scheme', value: 'BHP256' },
+                  { label: 'Proof System', value: 'ZK-SNARK' },
+                  { label: 'Smart Contract', value: 'Leo v2.1' },
+                  { label: 'Network', value: 'Aleo Testnet' },
+                  { label: 'Identity Leaked', value: 'ZERO' },
+                ].map((item, idx, arr) => (
+                  <div key={item.label} className="flex items-center justify-between py-2.5" style={idx < arr.length - 1 ? { borderBottom: '1px solid rgba(255,255,255,0.04)' } : {}}>
+                    <span className="text-xs" style={{ color: 'rgba(212,190,236,0.5)' }}>{item.label}</span>
+                    <span className="text-xs font-bold font-mono" style={{ color: item.value === 'ZERO' ? '#87FF8B' : 'rgba(212,190,236,0.85)' }}>{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* ZK Proof Lifecycle */}
+          <motion.div variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} custom={2}>
+            <div className="liquid-glass rounded-2xl p-8">
+              <p className="text-center text-[10px] font-bold uppercase tracking-[0.3em] mb-8" style={{ color: 'rgba(212,190,236,0.3)' }}>ZK Proof Lifecycle</p>
+              <div className="flex items-start justify-center gap-0 flex-wrap">
+                {[
+                  { step: '01', label: 'Commit', desc: 'BHP256 hashes job data on-chain without revealing content' },
+                  { step: '02', label: 'Prove', desc: 'Leo generates a SNARK proof of valid state transition' },
+                  { step: '03', label: 'Verify', desc: 'Validators confirm proof without seeing private inputs' },
+                  { step: '04', label: 'Release', desc: 'Escrow releases atomically on verified completion' },
+                ].map((item, i) => (
+                  <div key={item.step} className="flex items-center">
+                    <div className="flex flex-col items-center text-center w-[112px] sm:w-[130px]">
+                      <div
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center text-xs font-black mb-3"
+                        style={{ background: 'rgba(135,255,139,0.1)', border: '1px solid rgba(135,255,139,0.2)', color: '#87FF8B' }}
+                      >{item.step}</div>
+                      <span className="text-sm font-bold mb-1">{item.label}</span>
+                      <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(212,190,236,0.45)' }}>{item.desc}</p>
+                    </div>
+                    {i < 3 && (
+                      <div className="hidden sm:flex items-center pb-8 mx-1">
+                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(135,255,139,0.3)' }}>
+                          <path d="M5 12h14M13 6l6 6-6 6"/>
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </motion.div>
         </div>

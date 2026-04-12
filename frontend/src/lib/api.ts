@@ -100,6 +100,9 @@ export const apiClient = {
 
   verifyReputation: (commitment: string) => request(`/reputation/verify/${commitment}`),
 
+  getStats: () =>
+    request<{ jobs: number; openJobs: number; workers: number; agreements: number; activeAgreements: number }>('/stats'),
+
   verifyTransaction: async (txId: string): Promise<boolean> => {
     try {
       const res = await fetch(

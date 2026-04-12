@@ -36,6 +36,25 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('/api/stats', async (_req, res) => {
+  try {
+    const db = await getDB();
+    const jobs = Object.values(db.data.jobs || {});
+    const workers = Object.values(db.data.workers || {});
+    const agreements = Object.values(db.data.agreements || {});
+    res.json({
+      jobs: jobs.length,
+      openJobs: jobs.filter((j: any) => j.status === 'open').length,
+      workers: workers.length,
+      agreements: agreements.length,
+      activeAgreements: agreements.filter((a: any) => a.status === 'active').length,
+    });
+  } catch (err) {
+    console.error('[Stats] Error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.use('/api/auth', authRouter);
 app.use('/api/workers', workersRouter);
 app.use('/api/jobs', jobsRouter);
